@@ -1,0 +1,26 @@
+{
+    "light": {
+        "position": [-0.2, 0.5, -1],
+        "intensity": [2, 2, 2]
+    },
+    "material": {
+        "ambient_color": [0.0, 0.5, 0.0],
+        "diffuse_color": [0.5, 0.5, 0.5],
+        "specular_color": [0.2, 0.2, 0.2],
+        "shininess": 100.0
+    },
+    "camera": {
+        "is_perspective": true,
+        "position": [0.0, 0.0, 2.0],
+        "field_of_view": 0.7854,
+        "aspect_ratio": 1.0
+    },
+    "transform": {
+        "angle": 0.0,
+        "distance": 0.0
+    },
+    "model_matrix": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+    "view_matrix": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+    "projection_matrix": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+    "normal_matrix": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
+}
