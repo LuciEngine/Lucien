@@ -4,7 +4,7 @@ use iced::{Align, Column, Container, Image, Length, Scrollable, Text};
 
 use crate::application::EngineApp;
 use crate::core::message::Message;
-use crate::examples::bunny_backend;
+use crate::examples::bunny_raster;
 
 mod style {
     use iced::{container, Background, Color};
@@ -29,7 +29,7 @@ mod style {
 }
 
 pub fn bunny<'a>(_: u16, app: &EngineApp) -> Container<'a, Message> {
-    let raw = bunny_backend::render(app).unwrap();
+    let raw = bunny_raster::render(app).unwrap();
     Container::new(
         Image::new(image::Handle::from_memory(raw))
             .width(Length::Units(500))

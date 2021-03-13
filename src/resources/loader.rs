@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 use anyhow::{Context, Result};
 
-use crate::graphics::{PrimitiveType, Mesh, Material};
+use crate::graphics::{Material, Mesh, PrimitiveType};
 
 // Load resources
 pub trait ResourceLoader {
@@ -116,7 +116,8 @@ impl ResourceLoader for DefaultLoader {
 
     fn load_obj(&self, name: &str) -> Result<(Vec<Mesh>, Vec<Material>)> {
         let file_path = self.base_dir.join(name);
-        let (objs, mats) = tobj::load_obj(file_path, false)?;
+        let (objs, mats) = tobj::load_obj(&file_path, false)
+            .with_context(|| format!("Failed to load obj: {:?}", &file_path))?;
 
         let mut meshes = vec![];
         let mut materials = vec![];

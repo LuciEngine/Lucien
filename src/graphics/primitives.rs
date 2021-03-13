@@ -1,6 +1,6 @@
+use anyhow::Result;
 use glam::{Vec2, Vec3};
 use serde::Deserialize;
-use anyhow::Result;
 
 use crate::graphics::VertexAttributes;
 
@@ -28,8 +28,8 @@ pub struct Light {
 pub struct Mesh {
     pub positions: Vec<Vec3>,
     pub normals: Vec<Vec3>,
-    pub texcoords: Vec<Vec2>, // 2D texture coordinates of vertices.
-    pub indices: Vec<f32>, // Indices for vertices of each triangle.
+    pub texcoords: Vec<Vec2>,       // 2D texture coordinates of vertices.
+    pub indices: Vec<f32>,          // Indices for vertices of each triangle.
     pub num_face_indices: Vec<u32>, // The number of vertices used by each face.
     pub material_id: Option<usize>, // Optional associated mesh id.
 }
@@ -75,7 +75,7 @@ impl Mesh {
             let t2 = obj.texcoords[i + 1];
             coords.push(vec2(t1, t2));
         }
-        let inds = obj.indices.iter().map(|&i| { i as f32 }).collect();
+        let inds = obj.indices.iter().map(|&i| i as f32).collect();
 
         Self {
             positions: vertices,
@@ -83,17 +83,15 @@ impl Mesh {
             texcoords: coords,
             indices: inds,
             num_face_indices: obj.num_face_indices.clone(),
-            material_id: obj.material_id
+            material_id: obj.material_id,
         }
     }
 
     pub fn as_vertex_attrs(&self) -> Result<Vec<VertexAttributes>> {
         let mut vertices: Vec<VertexAttributes> = vec![];
         for i in 0..self.positions.len() {
-            vertices.push(VertexAttributes::new(
-                self.positions[i], self.normals[i]
-            ));
-        };
+            vertices.push(VertexAttributes::new(self.positions[i], self.normals[i]));
+        }
         Ok(vertices)
     }
 }
@@ -104,7 +102,7 @@ impl Material {
             ambient_color: Vec3::from(obj.ambient),
             diffuse_color: Vec3::from(obj.diffuse),
             specular_color: Vec3::from(obj.specular),
-            shininess: obj.shininess
+            shininess: obj.shininess,
         }
     }
 }

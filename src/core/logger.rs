@@ -41,8 +41,7 @@ impl CoreLogBuilder {
     // Build logger, default: Debug, Stdout, no Source info
     pub fn get_logger(&mut self) -> slog::Logger {
         // todo use env variables
-        self
-            .level(Level::Debug)
+        self.level(Level::Debug)
             .destination(Destination::Stderr)
             .source(Source::None);
         self.builder.build().unwrap()

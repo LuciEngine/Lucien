@@ -6,3 +6,6 @@ mod rainbow;
 
 // use raster backend to render 3d
 mod bunny_raster;
+// mod wgpu_raster;
+
+pub mod wgpu;

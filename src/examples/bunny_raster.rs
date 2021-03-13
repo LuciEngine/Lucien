@@ -41,7 +41,9 @@ pub fn render(app: &EngineApp) -> Result<Vec<u8>> {
         };
         let li: Vec3 = (uniform.light.position - va.frag_pos).normalize();
         let diffuse = uniform.material.diffuse_color * li.dot(n).max(0.0);
-        let specular = uniform.material.specular_color * n.dot((li + v).normalize()).max(0.0)
+        let specular = uniform.material.specular_color
+            * n.dot((li + v).normalize())
+                .max(0.0)
                 .powf(uniform.material.shininess);
         let d = uniform.light.position - va.frag_pos;
         let color = (diffuse + specular) * uniform.light.intensity / d.length_squared();
@@ -76,7 +78,7 @@ pub fn render(app: &EngineApp) -> Result<Vec<u8>> {
 
     let mesh = app.loader().load_off("bunny.off")?;
     let vertices: Vec<VertexAttributes> = mesh.as_vertex_attrs()?;
-    let indices: Vec<usize> = mesh.indices.iter().map(|&i| {i as usize}).collect();
+    let indices: Vec<usize> = mesh.indices.iter().map(|&i| i as usize).collect();
 
     match render_type {
         RenderType::Png => {
