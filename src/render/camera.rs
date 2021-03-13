@@ -1,5 +1,5 @@
-use glam::{vec3, Vec3, Mat4};
-use bytemuck::{ Pod, Zeroable };
+use bytemuck::{Pod, Zeroable};
+use glam::{vec3, Mat4, Vec3};
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -11,7 +11,7 @@ pub struct Camera {
     pub fov: f32,
     pub z_near: f32,
     pub z_far: f32,
-    pub view_proj: [[f32; 4]; 4]
+    pub view_proj: [[f32; 4]; 4],
 }
 
 unsafe impl Pod for Camera {}
@@ -36,7 +36,7 @@ impl Camera {
             fov,
             z_near,
             z_far,
-            view_proj: (view * proj).to_cols_array_2d()
+            view_proj: (view * proj).to_cols_array_2d(),
         }
     }
 

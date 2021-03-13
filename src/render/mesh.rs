@@ -18,31 +18,26 @@ impl Mesh {
                 position: [
                     mesh.positions[i * 3],
                     mesh.positions[i * 3 + 1],
-                    mesh.positions[i * 3 + 2]
+                    mesh.positions[i * 3 + 2],
                 ],
                 normal: [
                     mesh.normals[i * 3],
                     mesh.normals[i * 3 + 1],
-                    mesh.normals[i * 3 + 2]
+                    mesh.normals[i * 3 + 2],
                 ],
-                tex_coord: [
-                    mesh.texcoords[i * 2],
-                    mesh.texcoords[i * 2 + 1]
-                ],
+                tex_coord: [mesh.texcoords[i * 2], mesh.texcoords[i * 2 + 1]],
             });
         }
-        let vertex_buffer = device.create_buffer_init(
-            &wgpu::util::BufferInitDescriptor {
-                label: Some(format!("{} vertex buffer", name).as_str()),
-                contents: bytemuck::cast_slice(&vertices),
-                usage: wgpu::BufferUsage::VERTEX,
-            });
-        let index_buffer = device.create_buffer_init(
-            &wgpu::util::BufferInitDescriptor {
-                label: Some(format!("{} index buffer", name).as_str()),
-                contents: bytemuck::cast_slice(&mesh.indices),
-                usage: wgpu::BufferUsage::INDEX,
-            });
+        let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some(format!("{} vertex buffer", name).as_str()),
+            contents: bytemuck::cast_slice(&vertices),
+            usage: wgpu::BufferUsage::VERTEX,
+        });
+        let index_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some(format!("{} index buffer", name).as_str()),
+            contents: bytemuck::cast_slice(&mesh.indices),
+            usage: wgpu::BufferUsage::INDEX,
+        });
         let num_indices = mesh.indices.len() as u32;
         Self {
             vertex_buffer,

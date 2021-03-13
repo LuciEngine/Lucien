@@ -41,8 +41,7 @@ pub fn bunny<'a>(_: u16, app: &EngineApp) -> Container<'a, Message> {
 }
 
 pub fn container<'a>(
-    scroll: &'a mut scrollable::State,
-    bunny: Container<'a, Message>,
+    scroll: &'a mut scrollable::State, bunny: Container<'a, Message>,
 ) -> iced::Element<'a, Message> {
     let content = Column::new()
         .padding(20)

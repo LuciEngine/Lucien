@@ -36,7 +36,9 @@ pub fn main() {
                 // new_inner_size is &&mut so we have to dereference it twice
                 state.resize(**new_inner_size);
             }
-            _ => { state.input(event); }
+            _ => {
+                state.input(event);
+            }
         },
         Event::RedrawRequested(_) => {
             state.update();

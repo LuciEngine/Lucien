@@ -28,11 +28,7 @@ impl VertexAttributes {
     }
 
     pub fn interpolate(
-        a: VertexAttributes,
-        b: VertexAttributes,
-        c: VertexAttributes,
-        alpha: f32,
-        beta: f32,
+        a: VertexAttributes, b: VertexAttributes, c: VertexAttributes, alpha: f32, beta: f32,
         gamma: f32,
     ) -> Self {
         let mut r = VertexAttributes::default();

@@ -35,12 +35,8 @@ where
     fn hash_layout(&self, _state: &mut Hasher) {}
 
     fn draw(
-        &self,
-        _renderer: &mut Renderer<B>,
-        _defaults: &Defaults,
-        layout: Layout<'_>,
-        cursor_position: Point,
-        _viewport: &Rectangle,
+        &self, _renderer: &mut Renderer<B>, _defaults: &Defaults, layout: Layout<'_>,
+        cursor_position: Point, _viewport: &Rectangle,
     ) -> (Primitive, mouse::Interaction) {
         let b = layout.bounds();
 

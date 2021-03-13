@@ -1,6 +1,6 @@
+use bytemuck::{Pod, Zeroable};
 use wgpu;
 use wgpu::util::DeviceExt;
-use bytemuck::{ Pod, Zeroable };
 
 #[derive(Debug)]
 pub struct Light {
@@ -26,7 +26,11 @@ unsafe impl Pod for LightRaw {}
 // Point Light
 impl Light {
     pub fn new(position: [f32; 3], color: [f32; 3], device: &wgpu::Device) -> Self {
-        let raw = LightRaw { position, color, padding: 0.0 };
+        let raw = LightRaw {
+            position,
+            color,
+            padding: 0.0,
+        };
         let buffer = LightExt::buffer(raw, device);
         let (bind_group_layout, bind_group) = LightExt::layout(&buffer, device);
 
@@ -51,37 +55,35 @@ impl Light {
 struct LightExt;
 impl LightExt {
     pub fn buffer(raw: LightRaw, device: &wgpu::Device) -> wgpu::Buffer {
-        device.create_buffer_init(
-            &wgpu::util::BufferInitDescriptor {
-                label: Some("Light VB"),
-                contents: bytemuck::cast_slice(&[raw]),
-                usage: wgpu::BufferUsage::UNIFORM | wgpu::BufferUsage::COPY_DST,
-            })
+        device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Light VB"),
+            contents: bytemuck::cast_slice(&[raw]),
+            usage: wgpu::BufferUsage::UNIFORM | wgpu::BufferUsage::COPY_DST,
+        })
     }
 
-    pub fn layout(buffer: &wgpu::Buffer, device: &wgpu::Device) -> (wgpu::BindGroupLayout, wgpu::BindGroup) {
-        let layout =
-            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                entries: &[wgpu::BindGroupLayoutEntry {
-                    binding: 0,
-                    visibility: wgpu::ShaderStage::VERTEX | wgpu::ShaderStage::FRAGMENT,
-                    ty: wgpu::BindingType::UniformBuffer {
-                        dynamic: false,
-                        min_binding_size: None,
-                    },
-                    count: None,
-                }],
-                label: None,
-            });
+    pub fn layout(
+        buffer: &wgpu::Buffer, device: &wgpu::Device,
+    ) -> (wgpu::BindGroupLayout, wgpu::BindGroup) {
+        let layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            entries: &[wgpu::BindGroupLayoutEntry {
+                binding: 0,
+                visibility: wgpu::ShaderStage::VERTEX | wgpu::ShaderStage::FRAGMENT,
+                ty: wgpu::BindingType::UniformBuffer {
+                    dynamic: false,
+                    min_binding_size: None,
+                },
+                count: None,
+            }],
+            label: None,
+        });
 
         let group = device.create_bind_group(&wgpu::BindGroupDescriptor {
             layout: &layout,
-            entries: &[
-                    wgpu::BindGroupEntry {
-                        binding: 0,
-                        resource: wgpu::BindingResource::Buffer(buffer.slice(..)),
-                    },
-                ],
+            entries: &[wgpu::BindGroupEntry {
+                binding: 0,
+                resource: wgpu::BindingResource::Buffer(buffer.slice(..)),
+            }],
             label: None,
         });
 

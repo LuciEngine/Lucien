@@ -5,47 +5,28 @@ use glam::{vec2, vec3, Mat3, Vec3};
 
 pub trait Raster {
     fn render_triangle(
-        &self,
-        uniform: &UniformAttributes,
-        v1: &VertexAttributes,
-        v2: &VertexAttributes,
-        v3: &VertexAttributes,
-        frame_buffer: &mut FrameBuffer,
+        &self, uniform: &UniformAttributes, v1: &VertexAttributes, v2: &VertexAttributes,
+        v3: &VertexAttributes, frame_buffer: &mut FrameBuffer,
     ) -> Result<()>;
 
     fn render_triangles(
-        &self,
-        uniform: &UniformAttributes,
-        vertices: &[VertexAttributes],
-        indices: &[usize],
+        &self, uniform: &UniformAttributes, vertices: &[VertexAttributes], indices: &[usize],
         frame_buffer: &mut FrameBuffer,
     ) -> Result<()>;
 
     fn render_line(
-        &self,
-        uniform: &UniformAttributes,
-        v1: &VertexAttributes,
-        v2: &VertexAttributes,
-        line_thickness: f32,
-        frame_buffer: &mut FrameBuffer,
+        &self, uniform: &UniformAttributes, v1: &VertexAttributes, v2: &VertexAttributes,
+        line_thickness: f32, frame_buffer: &mut FrameBuffer,
     ) -> Result<()>;
 
     fn render_lines(
-        &self,
-        uniform: &UniformAttributes,
-        vertices: &[VertexAttributes],
-        indices: &[usize],
-        line_thickness: f32,
-        frame_buffer: &mut FrameBuffer,
+        &self, uniform: &UniformAttributes, vertices: &[VertexAttributes], indices: &[usize],
+        line_thickness: f32, frame_buffer: &mut FrameBuffer,
     ) -> Result<()>;
 
     fn render(
-        &self,
-        uniform: &UniformAttributes,
-        vertices: &[VertexAttributes],
-        indices: &[usize],
-        frame_buffer: &mut FrameBuffer,
-        primitive_type: PrimitiveType,
+        &self, uniform: &UniformAttributes, vertices: &[VertexAttributes], indices: &[usize],
+        frame_buffer: &mut FrameBuffer, primitive_type: PrimitiveType,
     ) -> Result<()>;
 }
 
@@ -60,12 +41,8 @@ pub struct Program {
 // They don't actually render, the data are processed into frame buffer
 impl Raster for Program {
     fn render_triangle(
-        &self,
-        uniform: &UniformAttributes,
-        v1: &VertexAttributes,
-        v2: &VertexAttributes,
-        v3: &VertexAttributes,
-        frame_buffer: &mut FrameBuffer,
+        &self, uniform: &UniformAttributes, v1: &VertexAttributes, v2: &VertexAttributes,
+        v3: &VertexAttributes, frame_buffer: &mut FrameBuffer,
     ) -> Result<()> {
         let mut p = vec![];
         p.push(v1.position / v1.position.w);
@@ -139,10 +116,7 @@ impl Raster for Program {
     }
 
     fn render_triangles(
-        &self,
-        uniform: &UniformAttributes,
-        vertices: &[VertexAttributes],
-        indices: &[usize],
+        &self, uniform: &UniformAttributes, vertices: &[VertexAttributes], indices: &[usize],
         frame_buffer: &mut FrameBuffer,
     ) -> Result<()> {
         for i in 0..indices.len() / 3 {
@@ -158,12 +132,8 @@ impl Raster for Program {
     }
 
     fn render_line(
-        &self,
-        uniform: &UniformAttributes,
-        v1: &VertexAttributes,
-        v2: &VertexAttributes,
-        line_thickness: f32,
-        frame_buffer: &mut FrameBuffer,
+        &self, uniform: &UniformAttributes, v1: &VertexAttributes, v2: &VertexAttributes,
+        line_thickness: f32, frame_buffer: &mut FrameBuffer,
     ) -> Result<()> {
         let mut p = vec![];
         p.push(v1.position / v1.position.w);
@@ -219,12 +189,8 @@ impl Raster for Program {
     }
 
     fn render_lines(
-        &self,
-        uniform: &UniformAttributes,
-        vertices: &[VertexAttributes],
-        indices: &[usize],
-        line_thickness: f32,
-        frame_buffer: &mut FrameBuffer,
+        &self, uniform: &UniformAttributes, vertices: &[VertexAttributes], indices: &[usize],
+        line_thickness: f32, frame_buffer: &mut FrameBuffer,
     ) -> Result<()> {
         for i in 0..indices.len() / 2 {
             self.render_line(
@@ -239,12 +205,8 @@ impl Raster for Program {
     }
 
     fn render(
-        &self,
-        uniform: &UniformAttributes,
-        vertices: &[VertexAttributes],
-        indices: &[usize],
-        frame_buffer: &mut FrameBuffer,
-        primitive_type: PrimitiveType,
+        &self, uniform: &UniformAttributes, vertices: &[VertexAttributes], indices: &[usize],
+        frame_buffer: &mut FrameBuffer, primitive_type: PrimitiveType,
     ) -> Result<()> {
         match primitive_type {
             PrimitiveType::Triangle => {

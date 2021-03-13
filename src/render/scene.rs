@@ -1,5 +1,5 @@
-use wgpu;
 use crate::render::*;
+use wgpu;
 
 pub struct Scene {
     pub models: Vec<Model>,
@@ -20,7 +20,8 @@ impl Scene {
             self.models.push(Model::new(device, model));
         });
         obj_materials.iter().for_each(|material| {
-            self.materials.push(Material::new(device, queue, material).unwrap());
+            self.materials
+                .push(Material::new(device, queue, material).unwrap());
         });
         self
     }
