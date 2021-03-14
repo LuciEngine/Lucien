@@ -149,27 +149,18 @@ impl State {
     }
 
     pub fn update(&mut self) {
-        let mut encoder = self
-            .device
-            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
-                label: Some("Update Encoder"),
-            });
+        let mut encoder = StateExt::create_encoder(Some("Update Encoder"), &self.device);
         // actual update
-        self.uniforms.camera.eye.z -= 0.1;
+        self.uniforms.camera.eye.z += 0.01;
         self.uniforms.camera.update_view_matrix();
-        // send updated data to buffer
         self.uniforms.update_buffer(&mut encoder, &self.device);
-        // commit commands
+        // commit changes
         self.queue.submit(std::iter::once(encoder.finish()));
     }
 
     pub fn render(&mut self) -> Result<(), wgpu::SwapChainError> {
         let frame = self.swap_chain.get_current_frame()?.output;
-        let mut encoder = self
-            .device
-            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
-                label: Some("Render Encoder"),
-            });
+        let mut encoder = StateExt::create_encoder(Some("Render Encoder"), &self.device);
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             color_attachments: &[wgpu::RenderPassColorAttachmentDescriptor {
                 attachment: &frame.view,
@@ -193,24 +184,18 @@ impl State {
                 stencil_ops: None,
             }),
         });
+        // render first material for first mesh
+        let material = &self.scene.materials[self.scene.models[0].mesh.material];
+        let mesh = &self.scene.models[0].mesh;
+
         render_pass.set_pipeline(&self.render_pipeline);
         render_pass.set_bind_group(0, &self.uniforms.bind_group, &[]);
-        render_pass.set_bind_group(
-            1,
-            &self.scene.materials[self.scene.models[0].mesh.material]
-                .diffuse_texture
-                .group,
-            &[],
-        );
-        render_pass.set_bind_group(
-            2,
-            &self.scene.materials[self.scene.models[0].mesh.material].bind_group,
-            &[],
-        );
+        render_pass.set_bind_group(1, &material.diffuse_texture.group, &[]);
+        render_pass.set_bind_group(2, &material.bind_group, &[]);
         render_pass.set_bind_group(3, &self.light.bind_group, &[]);
-        render_pass.set_vertex_buffer(0, self.scene.models[0].mesh.vertex_buffer.slice(..));
-        render_pass.set_index_buffer(self.scene.models[0].mesh.index_buffer.slice(..));
-        render_pass.draw_indexed(0..self.scene.models[0].mesh.num_indices, 0, 0..1);
+        render_pass.set_vertex_buffer(0, mesh.vertex_buffer.slice(..));
+        render_pass.set_index_buffer(mesh.index_buffer.slice(..));
+        render_pass.draw_indexed(0..mesh.num_indices, 0, 0..1);
         drop(render_pass);
         self.queue.submit(std::iter::once(encoder.finish()));
         Ok(())
@@ -220,6 +205,10 @@ impl State {
 struct StateExt;
 
 impl StateExt {
+    pub fn create_encoder(label: Option<&str>, device: &wgpu::Device) -> wgpu::CommandEncoder {
+        device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label })
+    }
+
     pub fn load_shaders(device: &wgpu::Device) -> (wgpu::ShaderModule, wgpu::ShaderModule) {
         let vs_src = include_str!("shaders/shader.vert.glsl");
         let fs_src = include_str!("shaders/shader.frag.glsl");

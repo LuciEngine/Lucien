@@ -18,6 +18,8 @@ pub struct Uniforms {
 #[derive(Debug, Copy, Clone)]
 pub struct UniformsRaw {
     pub view_proj: [[f32; 4]; 4],
+    pub cam_pos: [f32; 3],
+    pub cam_dir: [f32; 3],
 }
 
 unsafe impl Pod for UniformsRaw {}
@@ -25,13 +27,17 @@ unsafe impl Zeroable for UniformsRaw {}
 
 impl Uniforms {
     // This sends data once, if we want to update, need to use copy data to buffer
-    // update is not supported now
+    // Copy data is done in update_buffer
     pub fn new(mut camera: Camera, device: &wgpu::Device) -> Self {
         camera.update_view_matrix();
-        let raw = UniformsRaw {
-            view_proj: camera.view_proj,
-        };
-        let buffer = UniformsExt::buffer(raw, device);
+        let buffer = UniformsExt::buffer(
+            UniformsRaw {
+                view_proj: camera.view_proj,
+                cam_pos: camera.eye.into(),
+                cam_dir: camera.direction().into(),
+            },
+            device,
+        );
         let (bind_group_layout, bind_group) = UniformsExt::layout(&buffer, device);
 
         Uniforms {
@@ -46,15 +52,19 @@ impl Uniforms {
         Uniforms::new(Camera::default(), device)
     }
 
+    // create a buffer contains latest data, that we need to use a buffer to send data
+    // copy the buffer to previously created uniforms buffer
     pub fn update_buffer(&self, encoder: &mut wgpu::CommandEncoder, device: &wgpu::Device) {
-        // create a buffer contains latest data
-        let raw = UniformsRaw {
-            view_proj: self.camera.view_proj,
-        };
-        let buffer = UniformsExt::buffer(raw, device);
-        let len = (std::mem::size_of::<f32>() * 16) as wgpu::BufferAddress;
-        // copy the buffer to previously created uniforms buffer
-        encoder.copy_buffer_to_buffer(&buffer, 0, &self.buffer, 0, len);
+        let buffer = UniformsExt::buffer(
+            UniformsRaw {
+                view_proj: self.camera.view_proj,
+                cam_pos: self.camera.eye.into(),
+                cam_dir: self.camera.direction().into(),
+            },
+            device,
+        );
+        let buffer_size = std::mem::size_of::<UniformsRaw>() as wgpu::BufferAddress;
+        encoder.copy_buffer_to_buffer(&buffer, 0, &self.buffer, 0, buffer_size);
     }
 }
 
@@ -76,7 +86,7 @@ impl UniformsExt {
         let layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             entries: &[wgpu::BindGroupLayoutEntry {
                 binding: 0,
-                visibility: wgpu::ShaderStage::VERTEX,
+                visibility: wgpu::ShaderStage::VERTEX, // | wgpu::ShaderStage::FRAGMENT,
                 ty: wgpu::BindingType::UniformBuffer {
                     dynamic: false,
                     min_binding_size: None,

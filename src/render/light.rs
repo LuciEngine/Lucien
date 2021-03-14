@@ -45,8 +45,8 @@ impl Light {
     }
 
     pub fn default(device: &wgpu::Device) -> Self {
-        let position = [0.0, 1.0, 2.0];
-        let color = [1.0, 1.0, 1.0];
+        let position = [0.7, 0.0, 2.0];
+        let color = [0.0, 1.0, 1.0];
 
         Light::new(position, color, device)
     }
