@@ -5,10 +5,10 @@ use std::rc::Rc;
 pub struct Texture {
     pub texture: Rc<wgpu::Texture>,
     pub size: wgpu::Extent3d,
-    pub group: Rc<wgpu::BindGroup>,
-    pub layout: Rc<wgpu::BindGroupLayout>,
-    pub view: Rc<wgpu::TextureView>,
-    pub sampler: Rc<wgpu::Sampler>,
+    pub group: wgpu::BindGroup,
+    pub layout: wgpu::BindGroupLayout,
+    pub view: wgpu::TextureView,
+    pub sampler: wgpu::Sampler,
 }
 
 #[derive(Debug)]
@@ -50,10 +50,10 @@ impl Texture {
         Self {
             texture: Rc::new(diffuse_texture),
             size: texture_size,
-            group: Rc::new(group),
-            layout: Rc::new(layout),
-            view: Rc::new(view),
-            sampler: Rc::new(sampler),
+            group,
+            layout,
+            view,
+            sampler,
         }
     }
 }
@@ -157,12 +157,10 @@ impl TextureExt {
 }
 
 impl DepthTexture {
-    pub fn new(
-        device: &wgpu::Device, sc_desc: &wgpu::SwapChainDescriptor, label: Option<&str>,
-    ) -> Self {
+    pub fn new(device: &wgpu::Device, width: u32, height: u32, label: Option<&str>) -> Self {
         let size = wgpu::Extent3d {
-            width: sc_desc.width,
-            height: sc_desc.height,
+            width,
+            height,
             depth: 1,
         };
         let desc = wgpu::TextureDescriptor {

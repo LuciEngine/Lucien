@@ -1,7 +1,6 @@
 mod light;
 mod material;
 mod mesh;
-mod raw_data;
 mod scene;
 mod texture;
 mod vertex;
@@ -13,10 +12,10 @@ pub use scene::*;
 pub use texture::*;
 pub use vertex::*;
 
-mod pipeline;
-mod uniforms;
-pub use pipeline::*;
-pub use uniforms::*;
-
 mod camera;
+mod raw_data;
+mod renderer;
+mod uniforms;
 pub use camera::*;
+pub use renderer::*;
+pub use uniforms::*;

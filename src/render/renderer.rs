@@ -1,76 +1,40 @@
-use anyhow::{Context, Result};
+use anyhow::Result;
 use wgpu;
-use winit::window::*;
 
 use crate::render::*;
 
-pub struct State {
-    surface: wgpu::Surface,
+pub struct Renderer {
+    pub size: winit::dpi::PhysicalSize<u32>,
     device: wgpu::Device,
     queue: wgpu::Queue,
-    sc_desc: wgpu::SwapChainDescriptor,
     swap_chain: wgpu::SwapChain,
-    pub size: winit::dpi::PhysicalSize<u32>,
-    render_pipeline: wgpu::RenderPipeline,
+    render_pipeline: wgpu::RenderPipeline, // textured pipeline for mesh
     uniforms: Uniforms,
-    light: Light,
     scene: Scene,
     depth_texture: DepthTexture,
 }
 
-impl State {
-    pub async fn new(window: &Window) -> Result<Self> {
-        let size = window.inner_size();
+impl Renderer {
+    pub fn new(
+        device: wgpu::Device, queue: wgpu::Queue, size: winit::dpi::PhysicalSize<u32>,
+        swap_chain: wgpu::SwapChain,
+    ) -> Result<Self> {
+        // set up scene
+        let scene = Scene::new(&device).load("src/examples/data/cube.obj", &device, &queue);
+        // create buffer
+        let uniforms = Uniforms::new(&scene, &device);
+        // create depth texture
+        let depth_texture =
+            DepthTexture::new(&device, size.width, size.height, Some("depth_texture"));
 
-        // initializing GPU
-        let instance = wgpu::Instance::new(wgpu::BackendBit::PRIMARY);
-        let surface = unsafe { instance.create_surface(window) };
-        let adapter = instance
-            .request_adapter(&wgpu::RequestAdapterOptions {
-                power_preference: wgpu::PowerPreference::Default,
-                compatible_surface: Some(&surface),
-            })
-            .await
-            .context("Failed to create adapter")?;
-        let (device, queue) = adapter
-            .request_device(
-                &wgpu::DeviceDescriptor {
-                    features: wgpu::Features::empty(),
-                    limits: wgpu::Limits::default(),
-                    shader_validation: true,
-                },
-                None,
-            )
-            .await?;
-        let sc_desc = wgpu::SwapChainDescriptor {
-            usage: wgpu::TextureUsage::OUTPUT_ATTACHMENT,
-            format: wgpu::TextureFormat::Bgra8UnormSrgb,
-            width: size.width,
-            height: size.height,
-            present_mode: wgpu::PresentMode::Fifo,
-        };
-        let swap_chain = device.create_swap_chain(&surface, &sc_desc);
-
-        // 上面统统都没有
-
-        // load models and materials, set up scene + light + uniforms
-        let scene = Scene::new().load("src/examples/data/cube.obj", &device, &queue);
-        let uniforms = Uniforms::default(&device);
-        let light = Light::default(&device);
+        // first model & material
+        let mesh = &scene.models[0].mesh;
+        let material = &scene.materials[mesh.material];
 
         let mut bind_group_layouts = vec![&uniforms.bind_group_layout];
-        bind_group_layouts.push(
-            &scene.materials[scene.models[0].mesh.material]
-                .diffuse_texture
-                .layout,
-        );
-        bind_group_layouts.push(&scene.materials[scene.models[0].mesh.material].bind_group_layout);
-        bind_group_layouts.push(&light.bind_group_layout);
-
-        // load shaders
-        let (vs_module, fs_module) = StateExt::load_shaders(&device);
-        // create depth texture
-        let depth_texture = DepthTexture::new(&device, &sc_desc, Some("depth_texture"));
+        bind_group_layouts.push(&material.diffuse_texture.layout);
+        bind_group_layouts.push(&material.bind_group_layout);
+        bind_group_layouts.push(&scene.light.bind_group_layout);
 
         // render pipeline
         let render_pipeline_layout =
@@ -80,6 +44,8 @@ impl State {
                 push_constant_ranges: &[],
             });
 
+        // load shaders
+        let (vs_module, fs_module) = RendererExt::load_shaders(&device);
         let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some("raster_render_pipeline"),
             layout: Some(&render_pipeline_layout),
@@ -100,7 +66,7 @@ impl State {
                 clamp_depth: false,
             }),
             color_states: &[wgpu::ColorStateDescriptor {
-                format: sc_desc.format,
+                format: wgpu::TextureFormat::Bgra8UnormSrgb,
                 color_blend: wgpu::BlendDescriptor::REPLACE,
                 alpha_blend: wgpu::BlendDescriptor::REPLACE,
                 write_mask: wgpu::ColorWrite::ALL,
@@ -121,17 +87,13 @@ impl State {
             alpha_to_coverage_enabled: false,
         });
 
-        // creating buffers;
         Ok(Self {
-            surface,
+            size,
             device,
             queue,
-            sc_desc,
             swap_chain,
-            size,
             render_pipeline,
             uniforms,
-            light,
             scene,
             depth_texture,
         })
@@ -149,35 +111,40 @@ impl State {
     }
 
     pub fn update(&mut self) {
-        let mut encoder = StateExt::create_encoder(Some("Update Encoder"), &self.device);
-        // actual update
-        // self.uniforms.camera.eye.z -= 0.01;
-        self.uniforms.camera.update_view_matrix();
-        self.light.position.x -= 0.01;
+        let mut encoder = RendererExt::create_encoder(Some("Update Encoder"), &self.device);
+        // update scene
+        self.scene.camera.eye.z -= 0.01;
+        self.scene.camera.update_view_matrix();
+        self.scene.light.position = self.scene.camera.eye;
 
-        self.uniforms.update_buffer(&mut encoder, &self.device);
-        self.light.update_buffer(&mut encoder, &self.device);
-        // commit changes
+        self.uniforms
+            .update_buffer(&self.scene, &mut encoder, &self.device);
+        self.scene.light.update_buffer(&mut encoder, &self.device);
+
         self.queue.submit(std::iter::once(encoder.finish()));
     }
 
-    pub fn render(&mut self) -> Result<(), wgpu::SwapChainError> {
-        let frame = self.swap_chain.get_current_frame()?.output;
-        let mut encoder = StateExt::create_encoder(Some("Render Encoder"), &self.device);
+    pub fn render(&mut self, clear_color: Option<wgpu::Color>) -> Result<(), wgpu::SwapChainError> {
+        let clear = clear_color.unwrap_or(wgpu::Color {
+            r: 0.1,
+            g: 0.1,
+            b: 0.1,
+            a: 1.0,
+        });
+        // todo use external render target
+        let render_target = &self.swap_chain.get_current_frame()?.output.view;
+        let mut encoder = RendererExt::create_encoder(Some("Render Encoder"), &self.device);
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            // write colors to render target
             color_attachments: &[wgpu::RenderPassColorAttachmentDescriptor {
-                attachment: &frame.view,
+                attachment: render_target,
                 resolve_target: None,
                 ops: wgpu::Operations {
-                    load: wgpu::LoadOp::Clear(wgpu::Color {
-                        r: 0.1,
-                        g: 0.1,
-                        b: 0.1,
-                        a: 1.0,
-                    }),
+                    load: wgpu::LoadOp::Clear(clear),
                     store: true,
                 },
             }],
+            // write z-values to depth texture
             depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachmentDescriptor {
                 attachment: &self.depth_texture.view,
                 depth_ops: Some(wgpu::Operations {
@@ -195,7 +162,7 @@ impl State {
         render_pass.set_bind_group(0, &self.uniforms.bind_group, &[]);
         render_pass.set_bind_group(1, &material.diffuse_texture.group, &[]);
         render_pass.set_bind_group(2, &material.bind_group, &[]);
-        render_pass.set_bind_group(3, &self.light.bind_group, &[]);
+        render_pass.set_bind_group(3, &self.scene.light.bind_group, &[]);
         render_pass.set_vertex_buffer(0, mesh.vertex_buffer.slice(..));
         render_pass.set_index_buffer(mesh.index_buffer.slice(..));
         render_pass.draw_indexed(0..mesh.num_indices, 0, 0..1);
@@ -205,9 +172,9 @@ impl State {
     }
 }
 
-struct StateExt;
+struct RendererExt;
 
-impl StateExt {
+impl RendererExt {
     pub fn create_encoder(label: Option<&str>, device: &wgpu::Device) -> wgpu::CommandEncoder {
         device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label })
     }

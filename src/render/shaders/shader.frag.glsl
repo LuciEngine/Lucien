@@ -19,7 +19,7 @@ layout(set=2, binding=0) uniform MaterialRaw {
 // uniforms: light data
 layout(set=3, binding=0) uniform Light {
   vec3 l_position;
-  vec3 l_color;//wrong!!!
+  vec3 l_color;
 };
 
 layout(location=0) in vec3 v_position;
@@ -31,7 +31,7 @@ layout(location=0) out vec4 f_color;
 void main() {
   // pixel is behind camera, we hide it
   vec3 view_dir = normalize(cam_pos - v_position);
-  if (dot(view_dir, cam_dir) >= 0.0) { discard; }
+  if (dot(view_dir, cam_dir) > 0.0) { discard; }
   // uv has some problem, idk why
   vec4 obj_color = texture(sampler2D(t_diffuse, s_diffuse), v_tex_coord);
   vec3 normal = normalize(v_normal);
@@ -44,5 +44,4 @@ void main() {
 
   vec3 result = (ambient * 0.2 + (diffuse + specular) * 0.8) * l_color * obj_color.xyz;
   f_color = vec4(result, obj_color.a);
-  // f_color = vec4(l_color, 1.0);
 }

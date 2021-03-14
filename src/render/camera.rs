@@ -18,6 +18,7 @@ unsafe impl Pod for Camera {}
 unsafe impl Zeroable for Camera {}
 
 impl Camera {
+    // By default, camera always look at `look_at`
     pub fn new(eye: Vec3, aspect_ratio: f32) -> Self {
         let look_at = Vec3::ZERO;
         let up = Vec3::Y;

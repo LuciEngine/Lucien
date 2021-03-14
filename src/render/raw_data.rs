@@ -13,6 +13,24 @@ pub struct LightRaw {
     pub color: Vector3<f32>,
 }
 
+#[derive(AsStd140)]
+pub struct MaterialRaw {
+    ambient: Vector3<f32>,
+    diffuse: Vector3<f32>,
+    specular: Vector3<f32>,
+    shininess: f32,
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct UniformsRaw {
+    pub view_proj: [[f32; 4]; 4],
+    pub cam_pos: [f32; 3],
+    _p0: f32,
+    pub cam_dir: [f32; 3],
+    _p1: f32,
+}
+
 impl LightRaw {
     pub fn from_vec3(position: &Vec3, color: &Vec3) -> Self {
         Self {
@@ -22,14 +40,6 @@ impl LightRaw {
     }
 }
 
-#[derive(AsStd140)]
-pub struct MaterialRaw {
-    ambient: Vector3<f32>,
-    diffuse: Vector3<f32>,
-    specular: Vector3<f32>,
-    shininess: f32,
-}
-
 impl MaterialRaw {
     pub fn from_tobj(material: &tobj::Material) -> Self {
         Self {
@@ -37,6 +47,21 @@ impl MaterialRaw {
             diffuse: Vector3::from_slice(&material.diffuse),
             specular: Vector3::from_slice(&material.specular),
             shininess: material.shininess,
+        }
+    }
+}
+
+unsafe impl bytemuck::Pod for UniformsRaw {}
+unsafe impl bytemuck::Zeroable for UniformsRaw {}
+
+impl UniformsRaw {
+    pub fn from(camera: &super::Camera) -> Self {
+        Self {
+            view_proj: camera.view_proj,
+            cam_pos: camera.eye.into(),
+            _p0: 0.0,
+            cam_dir: camera.direction().into(),
+            _p1: 0.0,
         }
     }
 }
