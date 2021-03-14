@@ -151,7 +151,7 @@ impl State {
     pub fn update(&mut self) {
         let mut encoder = StateExt::create_encoder(Some("Update Encoder"), &self.device);
         // actual update
-        self.uniforms.camera.eye.z += 0.01;
+        // self.uniforms.camera.eye.z -= 0.01;
         self.uniforms.camera.update_view_matrix();
         self.uniforms.update_buffer(&mut encoder, &self.device);
         // commit changes

@@ -86,7 +86,7 @@ impl UniformsExt {
         let layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             entries: &[wgpu::BindGroupLayoutEntry {
                 binding: 0,
-                visibility: wgpu::ShaderStage::VERTEX, // | wgpu::ShaderStage::FRAGMENT,
+                visibility: wgpu::ShaderStage::VERTEX | wgpu::ShaderStage::FRAGMENT,
                 ty: wgpu::BindingType::UniformBuffer {
                     dynamic: false,
                     min_binding_size: None,
