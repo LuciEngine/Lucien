@@ -29,17 +29,18 @@ layout(location=2) in vec2 v_tex_coord;
 layout(location=0) out vec4 f_color;
 
 void main() {
+  // pixel is behind camera, we hide it
+  vec3 view_dir = normalize(cam_pos - v_position);
+  if (dot(view_dir, cam_dir) >= 0.0) { discard; }
   // uv has some problem, idk why
   vec4 obj_color = texture(sampler2D(t_diffuse, s_diffuse), v_tex_coord);
-  vec3 n = normalize(v_normal);
-  vec3 li = normalize(l_position - v_position);
-  vec3 v = normalize(cam_pos - v_position);
-  // pixel is behind camera, we hide it
-  if (dot(v, cam_dir) >= 0.0) { discard; }
-  vec3 h = normalize(li + v);
-  vec3 diffuse = u_diffuse * max(dot(li, n), 0.0);
-  vec3 specular = u_specular * pow(max(dot(n, h), 0.0), u_shininess);
+  vec3 normal = normalize(v_normal);
+  vec3 light_dir = normalize(l_position - v_position);
+  vec3 half_dir = normalize(light_dir + view_dir);
+  // simple blinn phong
+  vec3 diffuse = u_diffuse * max(dot(light_dir, normal), 0.0);
+  vec3 specular = u_specular * pow(max(dot(normal, half_dir), 0.0), u_shininess);
   vec3 ambient = u_ambient;
-  vec3 result = (ambient * 0.1 + (diffuse + specular) * 0.9) * l_color * obj_color.xyz;
+  vec3 result = (ambient * 0.2 + (diffuse + specular) * 0.8) * l_color * obj_color.xyz;
   f_color = vec4(result, obj_color.a);
 }

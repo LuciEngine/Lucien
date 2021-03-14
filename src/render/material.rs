@@ -28,7 +28,7 @@ impl Material {
         device: &wgpu::Device, queue: &wgpu::Queue, material: &tobj::Material,
     ) -> Result<Self> {
         // let path = format!("data/{}", material.diffuse_texture);
-        let diffuse_texture = Texture::new("src/render/textures/rust.png", device, queue);
+        let diffuse_texture = Texture::new("src/render/textures/blank.png", device, queue);
         let name = material.name.as_str().to_string();
         let material_raw = MaterialRaw {
             ambient: Vector3::from_slice(&material.ambient),

@@ -1,12 +1,14 @@
 use bytemuck::{Pod, Zeroable};
 use wgpu;
 use wgpu::util::DeviceExt;
+use glam::{ vec3, Vec3 };
 
+// Point Light
 #[derive(Debug)]
 pub struct Light {
-    pub position: [f32; 3],
-    pub color: [f32; 3],
-    _padding: u32,
+    pub position: Vec3,
+    // set a bound?
+    pub color: Vec3,
     pub buffer: wgpu::Buffer,
     pub bind_group_layout: wgpu::BindGroupLayout,
     pub bind_group: wgpu::BindGroup,
@@ -17,27 +19,25 @@ pub struct Light {
 struct LightRaw {
     pub position: [f32; 3],
     pub color: [f32; 3],
-    pub padding: f32,
 }
 
 unsafe impl Zeroable for LightRaw {}
 unsafe impl Pod for LightRaw {}
 
-// Point Light
 impl Light {
-    pub fn new(position: [f32; 3], color: [f32; 3], device: &wgpu::Device) -> Self {
-        let raw = LightRaw {
-            position,
-            color,
-            padding: 0.0,
-        };
-        let buffer = LightExt::buffer(raw, device);
+    pub fn new(position: Vec3, color: Vec3, device: &wgpu::Device) -> Self {
+        let buffer = LightExt::buffer(
+            LightRaw {
+                position: position.into(),
+                color: color.into(),
+            },
+            device,
+        );
         let (bind_group_layout, bind_group) = LightExt::layout(&buffer, device);
 
         Light {
             position,
             color,
-            _padding: 0,
             buffer,
             bind_group_layout,
             bind_group,
@@ -45,10 +45,24 @@ impl Light {
     }
 
     pub fn default(device: &wgpu::Device) -> Self {
-        let position = [0.7, 0.0, 2.0];
-        let color = [0.0, 1.0, 1.0];
+        let position = vec3(0.7, 0.0, 2.0);
+        let color = vec3(0.1, 0.1, 0.1);
 
         Light::new(position, color, device)
+    }
+
+    // create a buffer contains latest data, that we need to use a buffer to send data
+    // copy the buffer to previously created light buffer
+    pub fn update_buffer(&self, encoder: &mut wgpu::CommandEncoder, device: &wgpu::Device) {
+        let buffer = LightExt::buffer(
+            LightRaw {
+                position: self.position.into(),
+                color: self.color.into(),
+            },
+            device,
+        );
+        let buffer_size = std::mem::size_of::<LightRaw>() as wgpu::BufferAddress;
+        encoder.copy_buffer_to_buffer(&buffer, 0, &self.buffer, 0, buffer_size);
     }
 }
 
@@ -56,9 +70,11 @@ struct LightExt;
 impl LightExt {
     pub fn buffer(raw: LightRaw, device: &wgpu::Device) -> wgpu::Buffer {
         device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Light VB"),
+            label: Some("Light Buffer"),
             contents: bytemuck::cast_slice(&[raw]),
-            usage: wgpu::BufferUsage::UNIFORM | wgpu::BufferUsage::COPY_DST,
+            usage: wgpu::BufferUsage::UNIFORM
+                | wgpu::BufferUsage::COPY_DST
+                | wgpu::BufferUsage::COPY_SRC,
         })
     }
 
@@ -75,7 +91,7 @@ impl LightExt {
                 },
                 count: None,
             }],
-            label: None,
+            label: Some("light_bind_group_layout"),
         });
 
         let group = device.create_bind_group(&wgpu::BindGroupDescriptor {
@@ -84,7 +100,7 @@ impl LightExt {
                 binding: 0,
                 resource: wgpu::BindingResource::Buffer(buffer.slice(..)),
             }],
-            label: None,
+            label: Some("light_bind_group"),
         });
 
         (layout, group)
