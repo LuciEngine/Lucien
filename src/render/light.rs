@@ -1,7 +1,8 @@
-use bytemuck::{Pod, Zeroable};
+use glam::{vec3, Vec3};
 use wgpu;
 use wgpu::util::DeviceExt;
-use glam::{ vec3, Vec3 };
+
+use super::raw_data::*;
 
 // Point Light
 #[derive(Debug)]
@@ -14,25 +15,9 @@ pub struct Light {
     pub bind_group: wgpu::BindGroup,
 }
 
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-struct LightRaw {
-    pub position: [f32; 3],
-    pub color: [f32; 3],
-}
-
-unsafe impl Zeroable for LightRaw {}
-unsafe impl Pod for LightRaw {}
-
 impl Light {
     pub fn new(position: Vec3, color: Vec3, device: &wgpu::Device) -> Self {
-        let buffer = LightExt::buffer(
-            LightRaw {
-                position: position.into(),
-                color: color.into(),
-            },
-            device,
-        );
+        let buffer = LightExt::buffer(LightRaw::from_vec3(&position, &color), device);
         let (bind_group_layout, bind_group) = LightExt::layout(&buffer, device);
 
         Light {
@@ -54,13 +39,7 @@ impl Light {
     // create a buffer contains latest data, that we need to use a buffer to send data
     // copy the buffer to previously created light buffer
     pub fn update_buffer(&self, encoder: &mut wgpu::CommandEncoder, device: &wgpu::Device) {
-        let buffer = LightExt::buffer(
-            LightRaw {
-                position: self.position.into(),
-                color: self.color.into(),
-            },
-            device,
-        );
+        let buffer = LightExt::buffer(LightRaw::from_vec3(&self.position, &self.color), device);
         let buffer_size = std::mem::size_of::<LightRaw>() as wgpu::BufferAddress;
         encoder.copy_buffer_to_buffer(&buffer, 0, &self.buffer, 0, buffer_size);
     }
@@ -71,7 +50,7 @@ impl LightExt {
     pub fn buffer(raw: LightRaw, device: &wgpu::Device) -> wgpu::Buffer {
         device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Light Buffer"),
-            contents: bytemuck::cast_slice(&[raw]),
+            contents: raw.as_std140().as_bytes(),
             usage: wgpu::BufferUsage::UNIFORM
                 | wgpu::BufferUsage::COPY_DST
                 | wgpu::BufferUsage::COPY_SRC,

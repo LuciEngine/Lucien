@@ -1,8 +1,14 @@
 #version 450
 
+// uniforms: camera data
+layout(set=0, binding=0) uniform Uniforms {
+  mat4 view_proj;
+  vec3 cam_pos;
+  vec3 cam_dir;
+};
+// texture data
 layout(set=1, binding=0) uniform texture2D t_diffuse;
 layout(set=1, binding=1) uniform sampler s_diffuse;
-
 // material data
 layout(set=2, binding=0) uniform MaterialRaw {
   vec3 u_ambient;
@@ -13,13 +19,7 @@ layout(set=2, binding=0) uniform MaterialRaw {
 // uniforms: light data
 layout(set=3, binding=0) uniform Light {
   vec3 l_position;
-  vec3 l_color;
-};
-// uniforms: camera data
-layout(set=4, binding=0) uniform Uniforms {
-  mat4 view_proj;
-  vec3 cam_pos;
-  vec3 cam_dir;
+  vec3 l_color;//wrong!!!
 };
 
 layout(location=0) in vec3 v_position;
@@ -41,6 +41,8 @@ void main() {
   vec3 diffuse = u_diffuse * max(dot(light_dir, normal), 0.0);
   vec3 specular = u_specular * pow(max(dot(normal, half_dir), 0.0), u_shininess);
   vec3 ambient = u_ambient;
+
   vec3 result = (ambient * 0.2 + (diffuse + specular) * 0.8) * l_color * obj_color.xyz;
   f_color = vec4(result, obj_color.a);
+  // f_color = vec4(l_color, 1.0);
 }

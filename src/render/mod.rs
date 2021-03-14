@@ -1,6 +1,7 @@
 mod light;
 mod material;
 mod mesh;
+mod raw_data;
 mod scene;
 mod texture;
 mod vertex;

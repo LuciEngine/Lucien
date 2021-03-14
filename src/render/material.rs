@@ -1,11 +1,10 @@
-use crate::render::Texture;
-
 use anyhow::Result;
-use crevice::std140::{AsStd140, Std140};
-use mint::Vector3;
 use tobj;
 use wgpu;
 use wgpu::util::DeviceExt;
+
+use super::raw_data::*;
+use crate::render::Texture;
 
 pub struct Material {
     pub diffuse_texture: Texture,
@@ -15,14 +14,6 @@ pub struct Material {
     pub bind_group: wgpu::BindGroup,
 }
 
-#[derive(AsStd140)]
-struct MaterialRaw {
-    ambient: Vector3<f32>,
-    diffuse: Vector3<f32>,
-    specular: Vector3<f32>,
-    shininess: f32,
-}
-
 impl Material {
     pub fn new(
         device: &wgpu::Device, queue: &wgpu::Queue, material: &tobj::Material,
@@ -30,12 +21,7 @@ impl Material {
         // let path = format!("data/{}", material.diffuse_texture);
         let diffuse_texture = Texture::new("src/render/textures/blank.png", device, queue);
         let name = material.name.as_str().to_string();
-        let material_raw = MaterialRaw {
-            ambient: Vector3::from_slice(&material.ambient),
-            diffuse: Vector3::from_slice(&material.diffuse),
-            specular: Vector3::from_slice(&material.specular),
-            shininess: material.shininess,
-        };
+        let material_raw = MaterialRaw::from_tobj(material);
         let buffer = MaterialExt::buffer(&name, &material_raw, device);
         let (bind_group_layout, bind_group) = MaterialExt::layout(&name, &buffer, &device);
 
