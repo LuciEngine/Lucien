@@ -155,8 +155,8 @@ impl Renderer {
             }),
         });
         // render first material for first mesh
-        let material = &self.scene.materials[self.scene.models[0].mesh.material];
         let mesh = &self.scene.models[0].mesh;
+        let material = &self.scene.materials[mesh.material];
 
         render_pass.set_pipeline(&self.render_pipeline);
         render_pass.set_bind_group(0, &self.uniforms.bind_group, &[]);

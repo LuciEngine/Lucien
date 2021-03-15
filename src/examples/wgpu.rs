@@ -61,6 +61,8 @@ pub fn main() {
     // initialize pipeline
     let mut renderer = Renderer::new(device, queue, size, swap_chain).unwrap();
 
+    // initialize loop
+
     event_loop.run(move |event, _, control_flow| match event {
         Event::WindowEvent {
             ref event,

@@ -1,5 +1,4 @@
 use wgpu;
-use wgpu::util::DeviceExt;
 
 use super::raw_data::*;
 use crate::render::Scene;
@@ -15,7 +14,8 @@ impl Uniforms {
     // This sends data once, if we want to update, need to use copy data to buffer
     // Copy data is done in update_buffer
     pub fn new(scene: &Scene, device: &wgpu::Device) -> Self {
-        let buffer = UniformsExt::buffer(UniformsRaw::from(&scene.camera), device);
+        let raw = UniformsRaw::from(scene);
+        let buffer = uniform_buffer(bytemuck::cast_slice(&[raw]), device, Some("Unforms Buffer"));
         let (bind_group_layout, bind_group) = UniformsExt::layout(&buffer, device);
 
         Uniforms {
@@ -30,7 +30,12 @@ impl Uniforms {
     pub fn update_buffer(
         &self, scene: &Scene, encoder: &mut wgpu::CommandEncoder, device: &wgpu::Device,
     ) {
-        let buffer = UniformsExt::buffer(UniformsRaw::from(&scene.camera), device);
+        let raw = UniformsRaw::from(scene);
+        let buffer = uniform_buffer(
+            bytemuck::cast_slice(&[raw]),
+            device,
+            Some("Uniforms Buffer"),
+        );
         let buffer_size = std::mem::size_of::<UniformsRaw>() as wgpu::BufferAddress;
         encoder.copy_buffer_to_buffer(&buffer, 0, &self.buffer, 0, buffer_size);
     }
@@ -38,16 +43,6 @@ impl Uniforms {
 
 struct UniformsExt;
 impl UniformsExt {
-    pub fn buffer(raw: UniformsRaw, device: &wgpu::Device) -> wgpu::Buffer {
-        device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("uniform_buffer"),
-            contents: bytemuck::cast_slice(&[raw]),
-            usage: wgpu::BufferUsage::UNIFORM
-                | wgpu::BufferUsage::COPY_DST
-                | wgpu::BufferUsage::COPY_SRC,
-        })
-    }
-
     pub fn layout(
         buffer: &wgpu::Buffer, device: &wgpu::Device,
     ) -> (wgpu::BindGroupLayout, wgpu::BindGroup) {

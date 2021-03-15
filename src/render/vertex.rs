@@ -12,6 +12,26 @@ unsafe impl Pod for Vertex {}
 unsafe impl Zeroable for Vertex {}
 
 impl Vertex {
+    pub fn from_tobj(mesh: &tobj::Mesh) -> Vec<Vertex> {
+        let mut vertices: Vec<Vertex> = vec![];
+        for i in 0..mesh.positions.len() / 3 {
+            vertices.push(Self {
+                position: [
+                    mesh.positions[i * 3],
+                    mesh.positions[i * 3 + 1],
+                    mesh.positions[i * 3 + 2],
+                ],
+                normal: [
+                    mesh.normals[i * 3],
+                    mesh.normals[i * 3 + 1],
+                    mesh.normals[i * 3 + 2],
+                ],
+                tex_coord: [mesh.texcoords[i * 2], mesh.texcoords[i * 2 + 1]],
+            });
+        }
+        vertices
+    }
+
     pub fn desc<'a>() -> wgpu::VertexBufferDescriptor<'a> {
         wgpu::VertexBufferDescriptor {
             stride: std::mem::size_of::<Vertex>() as wgpu::BufferAddress,

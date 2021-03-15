@@ -1,7 +1,6 @@
 use anyhow::Result;
 use tobj;
 use wgpu;
-use wgpu::util::DeviceExt;
 
 use super::raw_data::*;
 use crate::render::Texture;
@@ -21,8 +20,8 @@ impl Material {
         // let path = format!("data/{}", material.diffuse_texture);
         let diffuse_texture = Texture::new("src/render/textures/blank.png", device, queue);
         let name = material.name.as_str().to_string();
-        let material_raw = MaterialRaw::from_tobj(material);
-        let buffer = MaterialExt::buffer(&name, &material_raw, device);
+        let raw = MaterialRaw::from_tobj(material);
+        let buffer = uniform_buffer(raw.as_std140().as_bytes(), device, Some("Material Buffer"));
         let (bind_group_layout, bind_group) = MaterialExt::layout(&name, &buffer, &device);
 
         Ok(Self {
@@ -37,16 +36,6 @@ impl Material {
 
 struct MaterialExt;
 impl MaterialExt {
-    pub fn buffer(
-        name: &String, material_raw: &MaterialRaw, device: &wgpu::Device,
-    ) -> wgpu::Buffer {
-        device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some(format!("{} material buffer", name).as_str()),
-            contents: material_raw.as_std140().as_bytes(),
-            usage: wgpu::BufferUsage::UNIFORM | wgpu::BufferUsage::COPY_DST,
-        })
-    }
-
     pub fn layout(
         name: &String, buffer: &wgpu::Buffer, device: &wgpu::Device,
     ) -> (wgpu::BindGroupLayout, wgpu::BindGroup) {

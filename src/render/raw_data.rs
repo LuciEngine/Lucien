@@ -8,9 +8,16 @@ use glam::Vec3;
 use mint::Vector3;
 
 #[derive(AsStd140)]
-pub struct LightRaw {
+pub struct PointLightRaw {
     pub position: Vector3<f32>,
     pub color: Vector3<f32>,
+    pub intensity: f32,
+}
+
+#[derive(AsStd140)]
+pub struct AmbientLightRaw {
+    pub color: Vector3<f32>,
+    pub intensity: f32,
 }
 
 #[derive(AsStd140)]
@@ -29,13 +36,32 @@ pub struct UniformsRaw {
     _p0: f32,
     pub cam_dir: [f32; 3],
     _p1: f32,
+    pub ambient_light_color: [f32; 3],
+    _p2: f32,
+    pub ambient_light_intensity: f32,
+    _p3: [f32; 3],
 }
 
-impl LightRaw {
-    pub fn from_vec3(position: &Vec3, color: &Vec3) -> Self {
+pub fn vec3_to_raw(v: &Vec3) -> Vector3<f32> {
+    Vector3::from_slice(v.as_ref())
+}
+
+impl PointLightRaw {
+    pub fn from_vec3(position: &Vec3, color: &Vec3, intensity: f32) -> Self {
         Self {
-            position: Vector3::from_slice(position.as_ref()),
-            color: Vector3::from_slice(color.as_ref()),
+            position: vec3_to_raw(position),
+            color: vec3_to_raw(color),
+            intensity,
+        }
+    }
+}
+
+#[allow(dead_code)]
+impl AmbientLightRaw {
+    pub fn from_vec3(color: &Vec3, intensity: f32) -> Self {
+        Self {
+            color: vec3_to_raw(color),
+            intensity,
         }
     }
 }
@@ -55,13 +81,28 @@ unsafe impl bytemuck::Pod for UniformsRaw {}
 unsafe impl bytemuck::Zeroable for UniformsRaw {}
 
 impl UniformsRaw {
-    pub fn from(camera: &super::Camera) -> Self {
+    pub fn from(scene: &super::Scene) -> Self {
         Self {
-            view_proj: camera.view_proj,
-            cam_pos: camera.eye.into(),
+            view_proj: scene.camera.view_proj,
+            cam_pos: scene.camera.eye.into(),
             _p0: 0.0,
-            cam_dir: camera.direction().into(),
+            cam_dir: scene.camera.direction().into(),
             _p1: 0.0,
+            ambient_light_color: scene.ambient_light.color.into(),
+            _p2: 0.0,
+            ambient_light_intensity: scene.ambient_light.intensity,
+            _p3: [0.0, 0.0, 0.0],
         }
     }
+}
+
+pub fn uniform_buffer(contents: &[u8], device: &wgpu::Device, label: Option<&str>) -> wgpu::Buffer {
+    use wgpu::util::DeviceExt;
+    device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+        label,
+        contents,
+        usage: wgpu::BufferUsage::UNIFORM
+            | wgpu::BufferUsage::COPY_DST
+            | wgpu::BufferUsage::COPY_SRC,
+    })
 }

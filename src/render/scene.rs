@@ -3,7 +3,8 @@ use wgpu;
 
 pub struct Scene {
     pub camera: Camera,
-    pub light: Light, // todo: multiple lights
+    pub light: PointLight, // todo: multiple lights
+    pub ambient_light: AmbientLight,
     pub models: Vec<Model>,
     pub materials: Vec<Material>,
 }
@@ -13,11 +14,13 @@ impl Scene {
         let models = vec![];
         let materials = vec![];
         let camera = Camera::default();
-        let light = Light::default(device);
+        let light = PointLight::default(device);
+        let ambient_light = AmbientLight::default();
 
         Self {
             camera,
             light,
+            ambient_light,
             models,
             materials,
         }
