@@ -1,6 +1,7 @@
 use wgpu;
 
-use super::raw_data::*;
+use super::buffer::uniform_buffer;
+use super::gpu_data::*;
 use crate::render::Scene;
 
 #[derive(Debug)]

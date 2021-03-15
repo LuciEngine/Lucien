@@ -2,7 +2,8 @@ use anyhow::Result;
 use tobj;
 use wgpu;
 
-use super::raw_data::*;
+use super::buffer::uniform_buffer;
+use super::gpu_data::*;
 use crate::render::Texture;
 
 pub struct Material {
@@ -19,7 +20,7 @@ impl Material {
     ) -> Result<Self> {
         // let path = format!("data/{}", material.diffuse_texture);
         let diffuse_texture = Texture::new("src/render/textures/blank.png", device, queue);
-        let name = material.name.as_str().to_string();
+        let name = material.name.clone();
         let raw = MaterialRaw::from_tobj(material);
         let buffer = uniform_buffer(raw.as_std140().as_bytes(), device, Some("Material Buffer"));
         let (bind_group_layout, bind_group) = MaterialExt::layout(&name, &buffer, &device);

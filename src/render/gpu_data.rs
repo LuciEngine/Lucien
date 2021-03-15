@@ -1,4 +1,4 @@
-pub(super) use crevice::std140::{AsStd140, Std140};
+pub use crevice::std140::{AsStd140, Std140};
 
 // We need the raw data to handle gpu memory layout,
 // the problem is, if we just cast to [u8], gpu doesn't like that,
@@ -40,10 +40,6 @@ pub struct UniformsRaw {
     _p2: f32,
     pub ambient_light_intensity: f32,
     _p3: [f32; 3],
-}
-
-pub fn vec3_to_raw(v: &Vec3) -> Vector3<f32> {
-    Vector3::from_slice(v.as_ref())
 }
 
 impl PointLightRaw {
@@ -96,13 +92,6 @@ impl UniformsRaw {
     }
 }
 
-pub fn uniform_buffer(contents: &[u8], device: &wgpu::Device, label: Option<&str>) -> wgpu::Buffer {
-    use wgpu::util::DeviceExt;
-    device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-        label,
-        contents,
-        usage: wgpu::BufferUsage::UNIFORM
-            | wgpu::BufferUsage::COPY_DST
-            | wgpu::BufferUsage::COPY_SRC,
-    })
+pub fn vec3_to_raw(v: &Vec3) -> Vector3<f32> {
+    Vector3::from_slice(v.as_ref())
 }
