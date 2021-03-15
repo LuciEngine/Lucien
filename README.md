@@ -1,40 +1,31 @@
 # Lucien
 
-This is the engine I create as my course project. It should render 3D graphics, supports scripting with [wren](https://wren.io), and has a flexible ui.
+3D render using WebGPU. Will supports scripting with [wren](https://wren.io), with some tools.
 
-## 🚥 Build 🚥
+## Run
 
-For current stage, I render a bunny.
+For current stage, it loads a mesh, renders it with a texture.
 
 ```bash
-# build
-cargo build
 # run
 cargo run [project_root]
 # e.g.
 cargo run src/examples/data
 ```
 
-## 🐢 Milestones 🐢
+## Roadmap
 
 ✔️ means done. ⚠️ means in progress or pending. Others not started yet.
 
-* Render [in-progress]
-	* ✔️ logger
-	* layers
-	* events
-		* Use iced native events.
-	* ✔️ resources
-	* ⚠️ 2D
-		* Maybe hand over it to iced?
-	* ⚠️ 3D
-		* Done a basic raster shader.
-		* Need to compile to GPU.
-		* Ray trace is tempting.
+* ✔️ Render
+	* ✔️ renders to memory directly.
+	* multiple light sources.
+	* multiple meshes.
+	* more camera + shaders (post processing + compute shader).
 * Scripting
-	* Game loop
+	* expose graphics api + game loop.
 * Tools
-	* Thinking on it...
+	* thinking hard on it...
 
 ## 🔨 Essential Tools 🔨
 
