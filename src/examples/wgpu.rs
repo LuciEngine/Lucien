@@ -1,14 +1,10 @@
+use crate::core::message::Message;
+use crate::render::*;
 use anyhow::{Context, Result};
 use futures::executor::block_on;
-
-use crate::render::*;
-
 use iced::scrollable;
 use iced::{Align, Column, Container, Length, Scrollable, Text};
 
-use crate::core::message::Message;
-
-#[allow(dead_code)]
 pub fn container(scroll: &mut scrollable::State) -> iced::Element<'_, Message> {
     let im = cube_image();
 

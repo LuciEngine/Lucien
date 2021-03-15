@@ -19,7 +19,7 @@ impl Into<wgpu::PrimitiveTopology> for RenderMode {
 impl Pipeline {
     pub fn textured(layout: &wgpu::PipelineLayout, device: &wgpu::Device) -> wgpu::RenderPipeline {
         let (vs_module, fs_module) = Pipeline::load_shaders(&device);
-        Pipeline::new(
+        Pipeline::create(
             Some("raster_render_pipeline"),
             layout,
             &vs_module,
@@ -31,7 +31,7 @@ impl Pipeline {
 
     pub fn wireframe(layout: &wgpu::PipelineLayout, device: &wgpu::Device) -> wgpu::RenderPipeline {
         let (vs_module, fs_module) = Pipeline::load_shaders(&device);
-        Pipeline::new(
+        Pipeline::create(
             Some("wireframe_render_pipeline"),
             layout,
             &vs_module,
@@ -72,7 +72,7 @@ impl Pipeline {
     }
 
     // todo accept config
-    fn new(
+    fn create(
         label: Option<&str>, layout: &wgpu::PipelineLayout, vs_module: &wgpu::ShaderModule,
         fs_module: &wgpu::ShaderModule, mode: RenderMode, device: &wgpu::Device,
     ) -> wgpu::RenderPipeline {

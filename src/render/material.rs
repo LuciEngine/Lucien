@@ -1,6 +1,4 @@
 use anyhow::Result;
-use tobj;
-use wgpu;
 
 use super::buffer::uniform_buffer;
 use super::gpu_data::*;
@@ -23,7 +21,7 @@ impl Material {
         let name = material.name.clone();
         let raw = MaterialRaw::from_tobj(material);
         let buffer = uniform_buffer(raw.as_std140().as_bytes(), device, Some("Material Buffer"));
-        let (bind_group_layout, bind_group) = MaterialExt::layout(&name, &buffer, &device);
+        let (bind_group_layout, bind_group) = MaterialExt::layout(&name.as_str(), &buffer, &device);
 
         Ok(Self {
             diffuse_texture,
@@ -38,7 +36,7 @@ impl Material {
 struct MaterialExt;
 impl MaterialExt {
     pub fn layout(
-        name: &String, buffer: &wgpu::Buffer, device: &wgpu::Device,
+        name: &str, buffer: &wgpu::Buffer, device: &wgpu::Device,
     ) -> (wgpu::BindGroupLayout, wgpu::BindGroup) {
         let layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             entries: &[wgpu::BindGroupLayoutEntry {

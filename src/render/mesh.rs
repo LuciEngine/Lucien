@@ -1,6 +1,4 @@
 use crate::render::Vertex;
-use tobj;
-use wgpu;
 use wgpu::util::DeviceExt;
 
 pub struct Mesh {
@@ -11,7 +9,7 @@ pub struct Mesh {
 }
 
 impl Mesh {
-    pub fn new(device: &wgpu::Device, mesh: &tobj::Mesh, name: &String) -> Self {
+    pub fn new(device: &wgpu::Device, mesh: &tobj::Mesh, name: &str) -> Self {
         let vertices = Vertex::from_tobj(mesh);
         let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some(format!("{} vertex buffer", name).as_str()),
@@ -41,7 +39,7 @@ pub struct Model {
 impl Model {
     pub fn new(device: &wgpu::Device, model: &tobj::Model) -> Self {
         let name = model.name.as_str().to_string();
-        let mesh = Mesh::new(device, &model.mesh, &name);
+        let mesh = Mesh::new(device, &model.mesh, &name.as_str());
         Self { mesh, name }
     }
 }

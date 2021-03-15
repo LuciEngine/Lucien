@@ -1,7 +1,7 @@
+use glam::{vec3, Vec3};
+
 use super::buffer::uniform_buffer;
 use super::gpu_data::*;
-use glam::{vec3, Vec3};
-use wgpu;
 
 // Point Light
 #[derive(Debug)]

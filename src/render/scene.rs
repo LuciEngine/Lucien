@@ -1,5 +1,4 @@
 use crate::render::*;
-use wgpu;
 
 pub struct Scene {
     pub camera: Camera,

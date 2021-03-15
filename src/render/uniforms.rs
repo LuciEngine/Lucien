@@ -1,5 +1,3 @@
-use wgpu;
-
 use super::buffer::uniform_buffer;
 use super::gpu_data::*;
 use crate::render::Scene;

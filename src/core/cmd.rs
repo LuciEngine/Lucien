@@ -2,7 +2,6 @@ use clap::{App, Arg};
 
 pub struct Builder;
 
-#[allow(dead_code)]
 impl Builder {
     pub fn get_args() -> App<'static, 'static> {
         App::new("Luci Engine")

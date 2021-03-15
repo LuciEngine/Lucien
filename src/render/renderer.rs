@@ -1,7 +1,5 @@
-use anyhow::{Context, Result};
-use wgpu;
-
 use crate::render::*;
+use anyhow::{Context, Result};
 
 pub type RgbaBuffer = image::ImageBuffer<image::Rgba<u8>, Vec<u8>>;
 

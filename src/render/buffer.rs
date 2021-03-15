@@ -1,4 +1,3 @@
-use wgpu;
 use wgpu::util::DeviceExt;
 
 // contents must match 4 bytes layout. should do that thru gpu_data.

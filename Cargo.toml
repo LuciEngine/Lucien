@@ -24,14 +24,13 @@ image = "0.23.*"
 # render
 tobj = "2.0.4"
 wgpu = "0.6.2" # latest is 0.7.0 but iced uses older version
-winit = "0.23.0"
 shaderc = "0.7.*"
 futures = "0.3"
 
 glam = { version = "0.13", features = ["serde"] } # math
-bytemuck = { version = "1.5", feature = "derive" } # type cast
-slotmap = "1.0" # store by id
 
+# type cast
+bytemuck = { version = "1.5", feature = "derive" }
 crevice = "0.5.0"
 mint = "0.5.6"
 
