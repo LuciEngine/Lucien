@@ -25,15 +25,7 @@ impl Texture {
         };
         let diffuse_texture = TextureExt::diffuse_texture(texture_size, device);
 
-        match TextureExt::upload_to_gpu(&diffuse_texture, &diffuse_rgba, texture_size, queue) {
-            Err(e) => {
-                eprintln!("{:?}", e);
-                panic!("Failed to upload texture.");
-            }
-            _ => {
-                println!("done.");
-            }
-        };
+        TextureExt::upload_to_gpu(&diffuse_texture, &diffuse_rgba, texture_size, queue).unwrap();
 
         // create gpu layout
         let (view, sampler) = TextureExt::view(&diffuse_texture, device);

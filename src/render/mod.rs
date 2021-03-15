@@ -19,9 +19,11 @@ pub use texture::*;
 pub use vertex::*;
 
 // the buffers, renderer used by wgpu pipeline
-mod buffer;
+pub mod buffer;
+mod pipelines;
 mod renderer;
 mod uniforms;
+use pipelines::*;
 pub use renderer::*;
 pub use uniforms::*;
 

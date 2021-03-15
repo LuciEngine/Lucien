@@ -1,3 +1,4 @@
+use anyhow::Result;
 use std::rc::Rc;
 
 #[derive(Debug)]
@@ -8,31 +9,28 @@ pub struct RenderTexture {
 }
 
 impl RenderTexture {
-    pub fn new(width: u32, height: u32, device: &wgpu::Device) -> Self {
+    pub fn new(width: u32, height: u32, device: &wgpu::Device) -> Result<Self> {
         let size = wgpu::Extent3d {
             width,
             height,
             depth: 1,
         };
-        let texture_desc = wgpu::TextureDescriptor {
+        let desc = wgpu::TextureDescriptor {
             mip_level_count: 1,
             sample_count: 1,
             dimension: wgpu::TextureDimension::D2,
-            format: wgpu::TextureFormat::Rgba8UnormSrgb,
+            format: wgpu::TextureFormat::Bgra8UnormSrgb, // the format is required by render pipeline??
             usage: wgpu::TextureUsage::COPY_SRC | wgpu::TextureUsage::OUTPUT_ATTACHMENT,
-            label: None,
+            label: Some("Render Texture"),
             size,
         };
-        let texture = device.create_texture(&texture_desc);
-        let view = texture.create_view(&Default::default());
+        let texture = device.create_texture(&desc);
+        let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
 
-        Self {
+        Ok(Self {
             texture: Rc::new(texture),
             size,
             view,
-        }
+        })
     }
 }
-
-struct RenderTextureExt;
-impl RenderTextureExt {}
