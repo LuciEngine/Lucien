@@ -31,5 +31,5 @@ pub fn main() {
     renderer.update();
     renderer.read_to_buffer().unwrap();
 
-    block_on(renderer.save_png()).unwrap();
+    block_on(renderer.save_png("cube")).unwrap();
 }

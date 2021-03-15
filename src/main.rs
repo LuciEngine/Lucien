@@ -3,7 +3,6 @@
 mod application;
 mod core;
 mod examples;
-mod graphics; // deprecated
 mod render;
 mod resources;
 

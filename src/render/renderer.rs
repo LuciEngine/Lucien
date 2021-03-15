@@ -156,8 +156,8 @@ impl Renderer {
         Ok(())
     }
 
-    pub async fn save_png(&self) -> Result<()> {
-        self.state.save_png(&self.device).await
+    pub async fn save_png(&self, name: &str) -> Result<()> {
+        self.state.save_png(&self.device, name).await
     }
 }
 
@@ -200,7 +200,7 @@ impl RenderState {
         })
     }
 
-    async fn save_png(&self, device: &wgpu::Device) -> Result<()> {
+    async fn save_png(&self, device: &wgpu::Device, name: &str) -> Result<()> {
         {
             let buffer_slice = self.rb.as_ref().unwrap().slice(..);
 
@@ -219,7 +219,7 @@ impl RenderState {
             let raw =
                 ImageBuffer::<Bgra<u8>, _>::from_raw(self.size[0], self.size[1], data).unwrap();
             let buffer: ImageBuffer<Rgba<u8>, _> = raw.convert();
-            buffer.save("image.png").unwrap();
+            buffer.save(format!("{}.png", name)).unwrap();
 
             println!("image saved!");
         }

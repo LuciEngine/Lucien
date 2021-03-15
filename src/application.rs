@@ -110,8 +110,6 @@ impl iced::Application for EngineApp {
 
     // refresh window on message
     fn view(&mut self) -> iced::Element<'_, Self::Message> {
-        // crate::examples::iced_mesh::container(&mut self.state.scroll)
-        let bunny = crate::examples::raster::bunny(500, self);
-        crate::examples::raster::container(&mut self.state.scroll, bunny)
+        crate::examples::iced_mesh::container(&mut self.state.scroll)
     }
 }
