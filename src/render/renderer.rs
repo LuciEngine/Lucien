@@ -28,7 +28,7 @@ pub struct Renderer {
     queue: wgpu::Queue,
     textured_pipeline: wgpu::RenderPipeline,
     wireframe_pipeline: wgpu::RenderPipeline,
-    state: RenderState,
+    pub state: RenderState,
 }
 
 impl Renderer {
@@ -155,6 +155,10 @@ impl Renderer {
 
         Ok(())
     }
+
+    pub async fn save_png(&self) -> Result<()> {
+        self.state.save_png(&self.device).await
+    }
 }
 
 impl RenderSettings {
@@ -175,7 +179,6 @@ impl RenderSettings {
     }
 }
 
-#[allow(dead_code)]
 impl RenderState {
     pub fn new(size: [u32; 2], device: &wgpu::Device, queue: &wgpu::Queue) -> Result<Self> {
         use super::buffer::*;
@@ -195,5 +198,33 @@ impl RenderState {
             depth,
             scene,
         })
+    }
+
+    async fn save_png(&self, device: &wgpu::Device) -> Result<()> {
+        {
+            let buffer_slice = self.rb.as_ref().unwrap().slice(..);
+
+            println!("Start writing image...");
+            // NOTE: We have to create the mapping THEN device.poll() before await
+            // the future. Otherwise the application will freeze.
+            let mapping = buffer_slice.map_async(wgpu::MapMode::Read);
+            device.poll(wgpu::Maintain::Wait);
+            mapping.await.unwrap();
+
+            let data = buffer_slice.get_mapped_range();
+
+            // convert render texture from bgra to rgba
+            use image::buffer::ConvertBuffer;
+            use image::{Bgra, ImageBuffer, Rgba};
+            let raw =
+                ImageBuffer::<Bgra<u8>, _>::from_raw(self.size[0], self.size[1], data).unwrap();
+            let buffer: ImageBuffer<Rgba<u8>, _> = raw.convert();
+            buffer.save("image.png").unwrap();
+
+            println!("image saved!");
+        }
+        self.rb.as_ref().unwrap().unmap();
+
+        Ok(())
     }
 }

@@ -57,7 +57,6 @@ impl Camera {
 impl Default for Camera {
     fn default() -> Self {
         let eye = vec3(0.0, 1.0, 2.0);
-        let aspect_ratio = 16.0 / 9.0;
-        Camera::new(eye, aspect_ratio)
+        Camera::new(eye, 1.0)
     }
 }
