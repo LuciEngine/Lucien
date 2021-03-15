@@ -3,7 +3,7 @@ use std::io::Read;
 use std::path::PathBuf;
 
 use anyhow::{Context, Result};
-use tobj::{ Mesh, Material };
+use tobj::{Material, Mesh};
 
 // Load resources
 pub trait ResourceLoader {
@@ -50,7 +50,7 @@ impl ResourceLoader for DefaultLoader {
         let file_path = self.base_dir.join(name);
         let (objs, materials) = tobj::load_obj(&file_path, false)
             .with_context(|| format!("Failed to load obj: {:?}", &file_path))?;
-        let meshes = objs.into_iter().map(|obj| { obj.mesh }).collect();
+        let meshes = objs.into_iter().map(|obj| obj.mesh).collect();
         Ok((meshes, materials))
     }
 }

@@ -3,6 +3,8 @@ use wgpu;
 
 use crate::render::*;
 
+pub type RgbaBuffer = image::ImageBuffer<image::Rgba<u8>, Vec<u8>>;
+
 // Render to render_texture, and you can read it to render_buffer
 #[derive(Debug, Copy, Clone)]
 pub struct RenderSettings {
@@ -156,8 +158,8 @@ impl Renderer {
         Ok(())
     }
 
-    pub async fn save_png(&self, name: &str) -> Result<()> {
-        self.state.save_png(&self.device, name).await
+    pub async fn as_rgba(&self) -> Result<RgbaBuffer> {
+        self.state.as_rgba(&self.device).await
     }
 }
 
@@ -200,31 +202,26 @@ impl RenderState {
         })
     }
 
-    async fn save_png(&self, device: &wgpu::Device, name: &str) -> Result<()> {
-        {
-            let buffer_slice = self.rb.as_ref().unwrap().slice(..);
+    async fn as_rgba(&self, device: &wgpu::Device) -> Result<RgbaBuffer> {
+        let buffer_slice = self.rb.as_ref().unwrap().slice(..);
+        // we have to create the mapping THEN device.poll() before await
+        // the future. Otherwise the application will freeze.
+        let mapping = buffer_slice.map_async(wgpu::MapMode::Read);
+        device.poll(wgpu::Maintain::Wait);
+        mapping.await.unwrap();
 
-            println!("Start writing image...");
-            // NOTE: We have to create the mapping THEN device.poll() before await
-            // the future. Otherwise the application will freeze.
-            let mapping = buffer_slice.map_async(wgpu::MapMode::Read);
-            device.poll(wgpu::Maintain::Wait);
-            mapping.await.unwrap();
+        let data = buffer_slice.get_mapped_range();
 
-            let data = buffer_slice.get_mapped_range();
+        // convert render texture from bgra to rgba
+        use image::buffer::ConvertBuffer;
+        use image::{Bgra, ImageBuffer, Rgba};
+        let width = self.size[0];
+        let height = self.size[1];
+        let raw = ImageBuffer::<Bgra<u8>, _>::from_raw(width, height, data).unwrap();
+        let buffer: ImageBuffer<Rgba<u8>, _> = raw.convert();
 
-            // convert render texture from bgra to rgba
-            use image::buffer::ConvertBuffer;
-            use image::{Bgra, ImageBuffer, Rgba};
-            let raw =
-                ImageBuffer::<Bgra<u8>, _>::from_raw(self.size[0], self.size[1], data).unwrap();
-            let buffer: ImageBuffer<Rgba<u8>, _> = raw.convert();
-            buffer.save(format!("{}.png", name)).unwrap();
+        // self.rb.as_ref().unwrap().unmap();
 
-            println!("image saved!");
-        }
-        self.rb.as_ref().unwrap().unmap();
-
-        Ok(())
+        Ok(buffer)
     }
 }

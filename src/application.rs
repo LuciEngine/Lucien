@@ -110,6 +110,6 @@ impl iced::Application for EngineApp {
 
     // refresh window on message
     fn view(&mut self) -> iced::Element<'_, Self::Message> {
-        crate::examples::iced_mesh::container(&mut self.state.scroll)
+        crate::examples::wgpu::container(&mut self.state.scroll)
     }
 }
