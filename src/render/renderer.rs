@@ -3,7 +3,6 @@ use anyhow::{Context, Result};
 
 pub type RgbaBuffer = image::ImageBuffer<image::Rgba<u8>, Vec<u8>>;
 
-// Render to render_texture, and you can read it to render_buffer
 #[derive(Debug, Copy, Clone)]
 pub struct RenderSettings {
     pub render_mode: RenderMode,
@@ -21,6 +20,8 @@ pub struct RenderState {
     scene: Scene,
 }
 
+// Render to render texture, and you can read it to render buffer.
+// We determine which pipeline is used using render settings.
 #[allow(dead_code)]
 pub struct Renderer {
     pub size: [u32; 2],
@@ -32,10 +33,10 @@ pub struct Renderer {
 }
 
 impl Renderer {
+    // use first model & material to create pipeline memory layout
     pub fn new(device: wgpu::Device, queue: wgpu::Queue, size: [u32; 2]) -> Result<Self> {
         let state =
             RenderState::new(size, &device, &queue).context("Failed to create render state")?;
-        // first model & material
         let mesh = &state.scene.models[0].mesh;
         let material = &state.scene.materials[mesh.material];
 
@@ -44,7 +45,6 @@ impl Renderer {
         bind_group_layouts.push(&material.bind_group_layout);
         bind_group_layouts.push(&state.scene.light.bind_group_layout);
 
-        // render pipeline
         let render_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("render_pipeline_layout"),
@@ -65,8 +65,8 @@ impl Renderer {
     }
 
     pub fn update(&mut self) {
-        let mut encoder = Renderer::create_encoder(Some("Update Encoder"), &self.device);
-        // update scene
+        let mut encoder = self.create_encoder(Some("Update Encoder"));
+
         self.state.scene.camera.eye.z -= 0.01;
         self.state.scene.camera.update_view_matrix();
         self.state.scene.light.position = self.state.scene.camera.eye;
@@ -82,9 +82,11 @@ impl Renderer {
         self.queue.submit(std::iter::once(encoder.finish()));
     }
 
+    // Takes render settings, uses data in render state, and writes to a
+    // render texture that we set up earlier in the render state
     pub fn render(&mut self, settings: &RenderSettings) -> Result<()> {
         let clear = settings.get_clear_color();
-        let mut encoder = Renderer::create_encoder(Some("Render Encoder"), &self.device);
+        let mut encoder = self.create_encoder(Some("Render Encoder"));
         {
             let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 // write colors to render target
@@ -123,10 +125,8 @@ impl Renderer {
         Ok(())
     }
 
-    fn create_encoder(label: Option<&str>, device: &wgpu::Device) -> wgpu::CommandEncoder {
-        device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label })
-    }
-
+    // Save render result from render texture to render buffer,
+    // it is made explicit because we don't want to write buffer on every render.
     pub fn read_to_buffer(&self) -> Result<()> {
         assert_eq!(
             self.state.rb.is_none(),
@@ -134,7 +134,7 @@ impl Renderer {
             "Render Buffer not set, can't read render result to buffer."
         );
         let u32_size = std::mem::size_of::<u32>() as u32;
-        let mut encoder = Renderer::create_encoder(Some("Render Buffer Encoder"), &self.device);
+        let mut encoder = self.create_encoder(Some("Render Buffer Encoder"));
         encoder.copy_texture_to_buffer(
             wgpu::TextureCopyView {
                 texture: &self.state.rt.texture,
@@ -156,6 +156,12 @@ impl Renderer {
         Ok(())
     }
 
+    // An encoder is used to submit commands to gpu.
+    fn create_encoder(&self, label: Option<&str>) -> wgpu::CommandEncoder {
+        self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label })
+    }
+
+    // Convert current render result from render buffer to rgba
     pub async fn as_rgba(&self) -> Result<RgbaBuffer> {
         self.state.as_rgba(&self.device).await
     }
@@ -201,25 +207,26 @@ impl RenderState {
     }
 
     async fn as_rgba(&self, device: &wgpu::Device) -> Result<RgbaBuffer> {
-        let buffer_slice = self.rb.as_ref().unwrap().slice(..);
+        use image::buffer::ConvertBuffer;
+        use image::{Bgra, ImageBuffer, Rgba};
+
         // we have to create the mapping THEN device.poll() before await
         // the future. Otherwise the application will freeze.
+        let buffer_slice = self.rb.as_ref().unwrap().slice(..);
         let mapping = buffer_slice.map_async(wgpu::MapMode::Read);
+
         device.poll(wgpu::Maintain::Wait);
         mapping.await.unwrap();
 
         let data = buffer_slice.get_mapped_range();
-
         // convert render texture from bgra to rgba
-        use image::buffer::ConvertBuffer;
-        use image::{Bgra, ImageBuffer, Rgba};
+        // render texture is bgra by default, required by wgpu low level
         let width = self.size[0];
         let height = self.size[1];
         let raw = ImageBuffer::<Bgra<u8>, _>::from_raw(width, height, data).unwrap();
         let buffer: ImageBuffer<Rgba<u8>, _> = raw.convert();
 
         // self.rb.as_ref().unwrap().unmap();
-
         Ok(buffer)
     }
 }
