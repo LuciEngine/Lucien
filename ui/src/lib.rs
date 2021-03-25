@@ -167,7 +167,7 @@ impl Frontend {
         }
     }
 
-    pub fn update(&mut self, glob: &IntegrateState) {
+    pub fn update(&mut self, glob: &IntegrateState) -> Result<()> {
         self.state.update(
             glob.viewport.logical_size(),
             conversion::cursor_position(self.cursor_position, glob.viewport.scale_factor()),
@@ -175,12 +175,13 @@ impl Frontend {
             &mut self.renderer,
             &mut self.debug,
         );
+        Ok(())
     }
 
     pub fn render(
         &mut self, glob: &IntegrateState, target: &wgpu::SwapChainTexture,
         mut encoder: wgpu::CommandEncoder,
-    ) {
+    ) -> Result<()> {
         let mouse_interaction = self.renderer.backend_mut().draw(
             &glob.device,
             &mut self.staging_belt,
@@ -202,6 +203,7 @@ impl Frontend {
         // Update the mouse cursor
         glob.window
             .set_cursor_icon(iced_winit::conversion::mouse_interaction(mouse_interaction));
+        Ok(())
     }
 }
 
@@ -216,5 +218,10 @@ impl Backend {
         let renderer = render::Renderer::new(&glob.device, &glob.queue, &settings).unwrap();
 
         Self { settings, renderer }
+    }
+
+    pub fn update(&mut self, glob: &IntegrateState) -> Result<()> {
+        self.renderer.update(&glob.device, &glob.queue);
+        Ok(())
     }
 }

@@ -17,6 +17,7 @@ use ui::widgets::MainInterface;
 
 // todo: make application in ui and expose Application only,
 // impl title, subscrption and events inside
+// when do I update backend? how do I update it using external script?
 
 fn main() {
     let event_loop = EventLoop::new();
@@ -59,7 +60,9 @@ fn main() {
                 // If there are events pending
                 if !frontend.state.is_queue_empty() {
                     // We update iced
-                    frontend.update(&glob);
+                    frontend.update(&glob).expect("Update UI");
+                    // todo it's jaggy because it's not called at fixed rate
+                    backend.update(&glob).expect("Update Scene");
                     // and request a redraw
                     glob.window.request_redraw();
                 }
@@ -95,7 +98,7 @@ fn main() {
                     let encoder = backend
                         .renderer
                         .create_encoder(Some("Frontend Encoder"), &glob.device);
-                    frontend.render(&glob, &frame.output, encoder);
+                    frontend.render(&glob, &frame.output, encoder).expect("Render UI");
                 }
             }
             _ => {}
