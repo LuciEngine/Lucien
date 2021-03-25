@@ -110,9 +110,7 @@ impl GPUSupport {
 
     // Resize swap chain texture size
     pub fn create_swap_chain(
-        window: &winit::window::Window,
-        device: &wgpu::Device,
-        surface: &wgpu::Surface,
+        window: &winit::window::Window, device: &wgpu::Device, surface: &wgpu::Surface,
     ) -> Result<wgpu::SwapChain> {
         let swap_chain = {
             let size = window.inner_size();

@@ -42,7 +42,9 @@ unsafe impl Send for Renderer {}
 
 impl Renderer {
     // use first model & material to create pipeline memory layout
-    pub fn new(device: &wgpu::Device, queue: &wgpu::Queue, settings: &RenderSettings) -> Result<Self> {
+    pub fn new(
+        device: &wgpu::Device, queue: &wgpu::Queue, settings: &RenderSettings,
+    ) -> Result<Self> {
         let size = settings.size;
         let state =
             RenderState::new(size, &device, &queue).context("Failed to create render state")?;
@@ -85,17 +87,16 @@ impl Renderer {
         self.state
             .uniforms
             .update_buffer(&self.state.scene, &mut encoder, device);
-        self.state
-            .scene
-            .light
-            .update_buffer(&mut encoder, device);
+        self.state.scene.light.update_buffer(&mut encoder, device);
 
         queue.submit(std::iter::once(encoder.finish()));
     }
 
     // Takes render settings, uses data in render state, and writes to a
     // render texture that we set up earlier in the render state
-    pub fn render(&self, settings: &RenderSettings, device: &wgpu::Device, queue: &wgpu::Queue) -> Result<()> {
+    pub fn render(
+        &self, settings: &RenderSettings, device: &wgpu::Device, queue: &wgpu::Queue,
+    ) -> Result<()> {
         let mut encoder = self.create_encoder(Some("Render Encoder"), device);
         {
             let mut render_pass = self.create_render_pass(settings, &mut encoder);
@@ -116,7 +117,11 @@ impl Renderer {
         Ok(())
     }
 
-    pub fn render_external(&self, target: &wgpu::SwapChainTexture, settings: &RenderSettings, device: &wgpu::Device, queue: &wgpu::Queue) -> Result<()> {
+    // Render to external target, instead of self.state.rt
+    pub fn render_external(
+        &self, target: &wgpu::SwapChainTexture, settings: &RenderSettings, device: &wgpu::Device,
+        queue: &wgpu::Queue,
+    ) -> Result<()> {
         let mut encoder = self.create_encoder(Some("Render Encoder"), device);
         {
             let mut render_pass = self.create_render_pass_external(target, settings, &mut encoder);
@@ -169,13 +174,16 @@ impl Renderer {
     }
 
     // An encoder is used to submit commands to gpu.
-    pub fn create_encoder(&self, label: Option<&str>, device: &wgpu::Device) -> wgpu::CommandEncoder {
-        device
-            .create_command_encoder(&wgpu::CommandEncoderDescriptor { label })
+    pub fn create_encoder(
+        &self, label: Option<&str>, device: &wgpu::Device,
+    ) -> wgpu::CommandEncoder {
+        device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label })
     }
 
     // Create a render pass, you are subjective to call encoder.finish after this
-    fn create_render_pass<'a>(&'a self, settings: &RenderSettings, encoder: &'a mut wgpu::CommandEncoder) -> wgpu::RenderPass<'a> {
+    fn create_render_pass<'a>(
+        &'a self, settings: &RenderSettings, encoder: &'a mut wgpu::CommandEncoder,
+    ) -> wgpu::RenderPass<'a> {
         let clear = settings.get_clear_color();
         let render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             // write colors to render target
@@ -201,7 +209,10 @@ impl Renderer {
     }
 
     // Create render pass for external render target
-    fn create_render_pass_external<'a>(&'a self, target: &'a wgpu::SwapChainTexture, settings: &RenderSettings, encoder: &'a mut wgpu::CommandEncoder) -> wgpu::RenderPass<'a> {
+    fn create_render_pass_external<'a>(
+        &'a self, target: &'a wgpu::SwapChainTexture, settings: &RenderSettings,
+        encoder: &'a mut wgpu::CommandEncoder,
+    ) -> wgpu::RenderPass<'a> {
         let clear = settings.get_clear_color();
         let render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             // write colors to render target
