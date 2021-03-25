@@ -1221,6 +1221,7 @@ checksum = "5f6310f02cfb482bb58a1ff6d000c654eff9975762a60f7fad8d821caf45562e"
 dependencies = [
  "futures",
  "log",
+ "tokio",
  "wasm-bindgen-futures",
 ]
 
@@ -1520,6 +1521,7 @@ dependencies = [
  "futures",
  "glam 0.13.0",
  "iced",
+ "iced_futures",
  "iced_graphics",
  "iced_native",
  "image",
@@ -2655,6 +2657,19 @@ name = "tobj"
 version = "2.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2468f55be8e59cf7219f1685cf1af4eb00ef2314823a7941a41c8d69538f881b"
+
+[[package]]
+name = "tokio"
+version = "0.3.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "46409491c9375a693ce7032101970a54f8a2010efb77e13f70788f0d84489e39"
+dependencies = [
+ "autocfg",
+ "futures-core",
+ "num_cpus",
+ "pin-project-lite",
+ "slab",
+]
 
 [[package]]
 name = "toml"

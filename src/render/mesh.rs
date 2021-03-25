@@ -1,6 +1,7 @@
 use crate::render::Vertex;
 use wgpu::util::DeviceExt;
 
+#[derive(Debug)]
 pub struct Mesh {
     pub vertex_buffer: wgpu::Buffer,
     pub index_buffer: wgpu::Buffer,
@@ -31,6 +32,7 @@ impl Mesh {
     }
 }
 
+#[derive(Debug)]
 pub struct Model {
     pub mesh: Mesh,
     pub name: String,

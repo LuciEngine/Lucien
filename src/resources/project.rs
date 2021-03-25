@@ -1,5 +1,5 @@
 use std::path::{Path, PathBuf};
-use std::rc::Rc;
+use std::sync::Arc;
 
 use slog::{error, info};
 
@@ -8,14 +8,14 @@ use crate::resources::{DefaultLoader, ResourceLoader};
 // Create or load a project under a directory
 pub struct Project {
     // access the engine level logger
-    logger: Rc<slog::Logger>,
+    logger: Arc<slog::Logger>,
     // project root directory
     base_dir: Option<PathBuf>,
     // load resource from the directory
     pub loader: Option<Box<dyn ResourceLoader>>,
 }
 impl Project {
-    pub fn new(core_logger: Rc<slog::Logger>) -> Self {
+    pub fn new(core_logger: Arc<slog::Logger>) -> Self {
         Self {
             logger: core_logger,
             base_dir: None,

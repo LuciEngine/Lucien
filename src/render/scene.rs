@@ -1,5 +1,6 @@
 use crate::render::*;
 
+#[derive(Debug)]
 pub struct Scene {
     pub camera: Camera,
     pub light: PointLight, // todo: multiple lights

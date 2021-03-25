@@ -1,9 +1,9 @@
 use anyhow::Result;
-use std::rc::Rc;
+use std::sync::Arc;
 
 #[derive(Debug)]
 pub struct RenderTexture {
-    pub texture: Rc<wgpu::Texture>,
+    pub texture: Arc<wgpu::Texture>,
     pub size: wgpu::Extent3d,
     pub view: wgpu::TextureView,
 }
@@ -28,7 +28,7 @@ impl RenderTexture {
         let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
 
         Ok(Self {
-            texture: Rc::new(texture),
+            texture: Arc::new(texture),
             size,
             view,
         })

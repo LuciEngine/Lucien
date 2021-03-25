@@ -2,9 +2,9 @@ use iced::Application;
 
 mod application;
 mod core;
-mod examples;
 mod render;
 mod resources;
+mod widgets;
 
 fn main() -> iced::Result {
     let args = core::cmd::Builder::get_args().get_matches();

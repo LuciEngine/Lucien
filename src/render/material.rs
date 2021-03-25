@@ -4,6 +4,7 @@ use super::buffer::uniform_buffer;
 use super::gpu_data::*;
 use crate::render::Texture;
 
+#[derive(Debug)]
 pub struct Material {
     pub diffuse_texture: Texture,
     pub name: String,

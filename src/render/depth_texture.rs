@@ -1,8 +1,8 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 #[derive(Debug)]
 pub struct DepthTexture {
-    pub texture: Rc<wgpu::Texture>,
+    pub texture: Arc<wgpu::Texture>,
     pub size: wgpu::Extent3d,
     pub view: wgpu::TextureView,
     pub sampler: wgpu::Sampler,
@@ -40,7 +40,7 @@ impl DepthTexture {
         });
 
         Self {
-            texture: Rc::new(texture),
+            texture: Arc::new(texture),
             view,
             sampler,
             size,
