@@ -3,9 +3,9 @@ use iced_winit::{
     slider, Align, Color, Column, Command, Element, Length, Program, Row, Slider, Text,
 };
 
-pub struct MainUI {
-    background_color: Color,
-    sliders: [slider::State; 3],
+pub struct MainInterface {
+    pub background_color: Color,
+    pub sliders: [slider::State; 3],
 }
 
 #[derive(Debug, Clone)]
@@ -13,10 +13,11 @@ pub enum Message {
     BackgroundColorChanged(Color),
 }
 
-impl MainUI {
-    pub fn new() -> MainUI {
-        MainUI {
-            background_color: Color::BLACK,
+// todo do actual main ui here
+impl MainInterface {
+    pub fn new() -> MainInterface {
+        Self {
+            background_color: Color::WHITE,
             sliders: Default::default(),
         }
     }
@@ -26,7 +27,7 @@ impl MainUI {
     }
 }
 
-impl Program for MainUI {
+impl Program for MainInterface {
     type Renderer = Renderer;
     type Message = Message;
 

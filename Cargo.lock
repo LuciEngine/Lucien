@@ -1524,6 +1524,7 @@ dependencies = [
  "iced_winit",
  "image",
  "lucien_render",
+ "lucien_ui",
  "serde",
  "serde_json",
  "slog",
@@ -1544,6 +1545,20 @@ dependencies = [
  "mint",
  "shaderc",
  "tobj",
+ "wgpu",
+]
+
+[[package]]
+name = "lucien_ui"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "iced",
+ "iced_futures",
+ "iced_native",
+ "iced_wgpu",
+ "iced_winit",
+ "lucien_render",
  "wgpu",
 ]
 

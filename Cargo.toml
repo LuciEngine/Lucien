@@ -7,11 +7,13 @@ edition = "2018"
 [workspace]
 members = [
   "render",
+  "ui",
 ]
 
 [dependencies]
 # 3d render
 lucien_render = { path = "./render" }
+lucien_ui = { path = "./ui" }
 
 # ui
 iced = { version = "0.2.0", features = ["image", "tokio"] }
