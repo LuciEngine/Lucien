@@ -19,7 +19,9 @@ impl Material {
     ) -> Result<Self> {
         use std::path::Path;
         // let path = format!("data/{}", material.diffuse_texture);
-        let abs = Path::new(".").join("render/src/textures/blank.png").canonicalize()?;
+        let abs = Path::new(".")
+            .join("render/src/textures/blank.png")
+            .canonicalize()?;
         let diffuse_texture = Texture::new(abs.to_str().unwrap(), device, queue);
         let name = material.name.clone();
         let raw = MaterialRaw::from_tobj(material);

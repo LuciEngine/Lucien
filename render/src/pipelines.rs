@@ -5,6 +5,11 @@ pub enum RenderMode {
     Default,
     WireFrame,
 }
+#[derive(Debug, Clone, Copy)]
+pub enum RenderTarget {
+    SwapChain,
+    RenderTexture,
+}
 pub struct Pipeline;
 
 impl Into<wgpu::PrimitiveTopology> for RenderMode {

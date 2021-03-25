@@ -3,13 +3,14 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use iced::{scrollable, Subscription};
+use iced_winit::winit;
 
-use crate::core::logger;
-use crate::core::message;
-use crate::render::{RenderSettings, Renderer, RgbaBuffer};
+// use crate::core::logger;
+// use crate::core::message;
+use crate::render::{RenderSettings, Renderer};
 use crate::resources::{Project, ResourceLoader};
 
-use futures::executor::block_on;
+// use futures::executor::block_on;
 
 pub struct Settings;
 
@@ -53,7 +54,7 @@ pub struct State {
     pub ticks: u32,
 }
 
-struct GPUSupport;
+pub struct GPUSupport;
 
 #[allow(dead_code)]
 pub struct EngineApp {
@@ -65,7 +66,7 @@ pub struct EngineApp {
 }
 
 impl GPUSupport {
-    async fn init_headless() -> Result<(wgpu::Device, wgpu::Queue)> {
+    pub async fn init_headless() -> Result<(wgpu::Device, wgpu::Queue)> {
         let instance = wgpu::Instance::new(wgpu::BackendBit::PRIMARY);
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
@@ -80,6 +81,54 @@ impl GPUSupport {
             .context("Failed to request device")?;
 
         Ok((device, queue))
+    }
+
+    pub async fn init_with_window(
+        window: &winit::window::Window,
+    ) -> Result<(wgpu::Device, wgpu::Queue, wgpu::Surface, wgpu::SwapChain)> {
+        let instance = wgpu::Instance::new(wgpu::BackendBit::PRIMARY);
+        let surface = unsafe { instance.create_surface(window) };
+
+        let adapter = instance
+            .request_adapter(&wgpu::RequestAdapterOptions {
+                power_preference: wgpu::PowerPreference::default(),
+                compatible_surface: Some(&surface),
+            })
+            .await
+            .context("Request adapter")?;
+
+        let (device, queue) = adapter
+            .request_device(&Default::default(), None)
+            .await
+            .context("Failed to request device")?;
+
+        let swap_chain = Self::create_swap_chain(&window, &device, &surface)
+            .context("Failed to create swap_chain")?;
+
+        Ok((device, queue, surface, swap_chain))
+    }
+
+    // Resize swap chain texture size
+    pub fn create_swap_chain(
+        window: &winit::window::Window,
+        device: &wgpu::Device,
+        surface: &wgpu::Surface,
+    ) -> Result<wgpu::SwapChain> {
+        let swap_chain = {
+            let size = window.inner_size();
+
+            device.create_swap_chain(
+                surface,
+                &wgpu::SwapChainDescriptor {
+                    usage: wgpu::TextureUsage::OUTPUT_ATTACHMENT,
+                    format: wgpu::TextureFormat::Bgra8UnormSrgb,
+                    width: size.width,
+                    height: size.height,
+                    present_mode: wgpu::PresentMode::Mailbox,
+                },
+            )
+        };
+        Ok(swap_chain)
     }
 }
 
@@ -101,121 +150,121 @@ impl EngineApp {
         self.project.as_ref().unwrap().path(name)
     }
 
-    // initialization of everything
-    fn with_args(args: ArgFlags) -> Result<Self> {
-        let root = args.value_of("project").unwrap();
-        let logger = Arc::new(logger::CoreLogBuilder::new().get_logger());
-        // init 3D renderer
-        let (device, queue) = block_on(GPUSupport::init_headless()).unwrap();
-        let render_settings = Arc::new(RenderSettings::default());
-        let renderer = Arc::new(Renderer::new(device, queue, render_settings.size)?);
-        // init project
-        let mut proj = Project::new(Arc::clone(&logger)).base_dir(root);
-        proj.create_or_load();
+    // // initialization of everything
+    // fn with_args(args: ArgFlags) -> Result<Self> {
+    //     let root = args.value_of("project").unwrap();
+    //     let logger = Arc::new(logger::CoreLogBuilder::new().get_logger());
+    //     // init 3D renderer
+    //     let (device, queue) = block_on(GPUSupport::init_headless()).unwrap();
+    //     let render_settings = Arc::new(RenderSettings::default());
+    //     let renderer = Arc::new(Renderer::new(device, queue, render_settings.size)?);
+    //     // init project
+    //     let mut proj = Project::new(Arc::clone(&logger)).base_dir(root);
+    //     proj.create_or_load();
+    //
+    //     Ok(EngineApp {
+    //         logger,
+    //         project: Some(proj),
+    //         state: State::default(),
+    //         render_settings,
+    //         renderer,
+    //     })
+    // }
 
-        Ok(EngineApp {
-            logger,
-            project: Some(proj),
-            state: State::default(),
-            render_settings,
-            renderer,
-        })
-    }
-
-    async fn render_to_buffer(
-        renderer: Arc<Renderer>, settings: Arc<RenderSettings>,
-    ) -> Result<RgbaBuffer, Error> {
-        renderer.render(&settings).context("Failed to render.")?;
-        renderer
-            .read_to_buffer()
-            .context("Failed to write to render buffer.")?;
-        // @todo this buffer convert is slow
-        let buffer = renderer
-            .as_rgba()
-            .await
-            .context("Failed to convert to rgba.")?;
-        Ok(buffer)
-    }
-
-    async fn render_to_file(buffer: Arc<RgbaBuffer>) -> Result<()> {
-        buffer.save("window.png")?;
-        Ok(())
-    }
+    // async fn render_to_buffer(
+    //     renderer: Arc<Renderer>, settings: Arc<RenderSettings>,
+    // ) -> Result<RgbaBuffer, Error> {
+    //     renderer.render(&settings, &device, &queue).context("Failed to render.")?;
+    //     renderer
+    //         .read_to_buffer()
+    //         .context("Failed to write to render buffer.")?;
+    //     // @todo this buffer convert is slow
+    //     let buffer = renderer
+    //         .as_rgba()
+    //         .await
+    //         .context("Failed to convert to rgba.")?;
+    //     Ok(buffer)
+    // }
+    //
+    // async fn render_to_file(buffer: Arc<RgbaBuffer>) -> Result<()> {
+    //     buffer.save("window.png")?;
+    //     Ok(())
+    // }
 }
 
-impl iced::Application for EngineApp {
-    // thread pool runs commands and subscriptions.
-    type Executor = iced::executor::Default;
-    // events used by the engine.
-    type Message = message::Message;
-    // command line flags.
-    type Flags = clap::ArgMatches<'static>;
-
-    fn new(args: Self::Flags) -> (Self, iced::Command<Self::Message>) {
-        (EngineApp::with_args(args).unwrap(), iced::Command::none())
-    }
-
-    fn title(&self) -> String {
-        format!("Lucien v{:?}", env!("CARGO_PKG_VERSION")).into()
-    }
-
-    fn update(&mut self, msg: Self::Message) -> iced::Command<Self::Message> {
-        match msg {
-            Self::Message::Tick => {
-                if self.state.ticks >= 100 {
-                    self.state.ticks = 0;
-                }
-                // update game logic
-                // in a separate thread, not in the main thread
-                // iced::Command::perform(
-                //     EngineApp::render_update(self.renderer.clone()),
-                //     Self::Message::UpdateComplete,
-                // );
-
-                // if it's busy, don't commit anything, this ensures the render
-                // operation is only executed one at a time; otherwise, the thread
-                // will panic.
-                if self.state.busy_render {
-                    iced::Command::none()
-                } else {
-                    self.state.busy_render = true;
-                    self.state.ticks += 1;
-
-                    iced::Command::perform(
-                        EngineApp::render_to_buffer(
-                            self.renderer.clone(),
-                            self.render_settings.clone(),
-                        ),
-                        Self::Message::RenderComplete,
-                    )
-                }
-            }
-            // once finished render, save them as file
-            Self::Message::RenderComplete(Ok(_buffer)) => {
-                self.state.busy_render = false;
-                iced::Command::none()
-                // iced::Command::perform(
-                //     EngineApp::render_to_file(Arc::new(buffer)),
-                //     Self::Message::RenderSaveComplete,
-                // )
-            }
-            // once finished save, the frame is done, we record the frame rate
-            Self::Message::RenderSaveComplete(Ok(())) => {
-                // self.state.ticks += 1;
-                iced::Command::none()
-            }
-            _ => iced::Command::none(),
-        }
-    }
-
-    // ~100 fps
-    fn subscription(&self) -> Subscription<Self::Message> {
-        // todo set self.state idle or update
-        iced_futures::time::every(std::time::Duration::from_millis(10)).map(|_| Self::Message::Tick)
-    }
-
-    // refresh window on message
-    fn view(&mut self) -> iced::Element<Self::Message> {
-        crate::widgets::main_window(&self.state)
-    }
-}
+// impl iced::Application for EngineApp {
+//     // thread pool runs commands and subscriptions.
+//     type Executor = iced::executor::Default;
+//     // events used by the engine.
+//     type Message = message::Message;
+//     // command line flags.
+//     type Flags = clap::ArgMatches<'static>;
+//
+//     fn new(args: Self::Flags) -> (Self, iced::Command<Self::Message>) {
+//         (EngineApp::with_args(args).unwrap(), iced::Command::none())
+//     }
+//
+//     fn title(&self) -> String {
+//         format!("Lucien v{:?}", env!("CARGO_PKG_VERSION")).into()
+//     }
+//
+//     fn update(&mut self, msg: Self::Message) -> iced::Command<Self::Message> {
+//         match msg {
+//             Self::Message::Tick => {
+//                 if self.state.ticks >= 100 {
+//                     self.state.ticks = 0;
+//                 }
+//                 // update game logic
+//                 // in a separate thread, not in the main thread
+//                 // iced::Command::perform(
+//                 //     EngineApp::render_update(self.renderer.clone()),
+//                 //     Self::Message::UpdateComplete,
+//                 // );
+//
+//                 // if it's busy, don't commit anything, this ensures the render
+//                 // operation is only executed one at a time; otherwise, the thread
+//                 // will panic.
+//                 if self.state.busy_render {
+//                     iced::Command::none()
+//                 } else {
+//                     self.state.busy_render = true;
+//                     self.state.ticks += 1;
+//
+//                     iced::Command::perform(
+//                         EngineApp::render_to_buffer(
+//                             self.renderer.clone(),
+//                             self.render_settings.clone(),
+//                         ),
+//                         Self::Message::RenderComplete,
+//                     )
+//                 }
+//             }
+//             // once finished render, save them as file
+//             Self::Message::RenderComplete(Ok(_buffer)) => {
+//                 self.state.busy_render = false;
+//                 iced::Command::none()
+//                 // iced::Command::perform(
+//                 //     EngineApp::render_to_file(Arc::new(buffer)),
+//                 //     Self::Message::RenderSaveComplete,
+//                 // )
+//             }
+//             // once finished save, the frame is done, we record the frame rate
+//             Self::Message::RenderSaveComplete(Ok(())) => {
+//                 // self.state.ticks += 1;
+//                 iced::Command::none()
+//             }
+//             _ => iced::Command::none(),
+//         }
+//     }
+//
+//     // ~100 fps
+//     fn subscription(&self) -> Subscription<Self::Message> {
+//         // todo set self.state idle or update
+//         iced_futures::time::every(std::time::Duration::from_millis(10)).map(|_| Self::Message::Tick)
+//     }
+//
+//     // refresh window on message
+//     fn view(&mut self) -> iced::Element<Self::Message> {
+//         crate::widgets::main_window(&self.state)
+//     }
+// }

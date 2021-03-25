@@ -1,5 +1,5 @@
-use anyhow::Result;
 use crate::{AmbientLight, Camera, Material, Model, PointLight};
+use anyhow::Result;
 
 #[derive(Debug)]
 pub struct Scene {

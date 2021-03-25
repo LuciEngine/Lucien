@@ -1519,6 +1519,7 @@ dependencies = [
  "futures",
  "iced",
  "iced_futures",
+ "iced_native",
  "iced_wgpu",
  "iced_winit",
  "image",
