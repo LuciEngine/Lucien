@@ -1,5 +1,5 @@
-use anyhow::Error;
 use crate::render::RgbaBuffer;
+use anyhow::Error;
 
 #[allow(dead_code)]
 #[derive(Debug)]

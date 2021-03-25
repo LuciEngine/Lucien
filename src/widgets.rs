@@ -1,5 +1,5 @@
-use crate::core::message::Message;
 use crate::application::State;
+use crate::core::message::Message;
 use iced::{Align, Column, Container, Length, Text};
 
 pub fn main_window(state: &State) -> iced::Element<'static, Message> {

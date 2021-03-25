@@ -1,6 +1,6 @@
-use anyhow::{Context, Result, Error};
+use anyhow::{Context, Error, Result};
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use iced::{scrollable, Subscription};
 
@@ -108,11 +108,7 @@ impl EngineApp {
         // init 3D renderer
         let (device, queue) = block_on(GPUSupport::init_headless()).unwrap();
         let render_settings = Arc::new(RenderSettings::default());
-        let renderer = Arc::new(Renderer::new(
-            device,
-            queue,
-            render_settings.size,
-        )?);
+        let renderer = Arc::new(Renderer::new(device, queue, render_settings.size)?);
         // init project
         let mut proj = Project::new(Arc::clone(&logger)).base_dir(root);
         proj.create_or_load();
@@ -127,13 +123,17 @@ impl EngineApp {
     }
 
     async fn render_to_buffer(
-        renderer: Arc<Renderer>,
-        settings: Arc<RenderSettings>
+        renderer: Arc<Renderer>, settings: Arc<RenderSettings>,
     ) -> Result<RgbaBuffer, Error> {
         renderer.render(&settings).context("Failed to render.")?;
-        renderer.read_to_buffer().context("Failed to write to render buffer.")?;
+        renderer
+            .read_to_buffer()
+            .context("Failed to write to render buffer.")?;
         // @todo this buffer convert is slow
-        let buffer = renderer.as_rgba().await.context("Failed to convert to rgba.")?;
+        let buffer = renderer
+            .as_rgba()
+            .await
+            .context("Failed to convert to rgba.")?;
         Ok(buffer)
     }
 
@@ -177,26 +177,28 @@ impl iced::Application for EngineApp {
                 // will panic.
                 if self.state.busy_render {
                     iced::Command::none()
-                }
-                else {
+                } else {
                     self.state.busy_render = true;
                     self.state.ticks += 1;
 
                     iced::Command::perform(
-                        EngineApp::render_to_buffer(self.renderer.clone(), self.render_settings.clone()),
+                        EngineApp::render_to_buffer(
+                            self.renderer.clone(),
+                            self.render_settings.clone(),
+                        ),
                         Self::Message::RenderComplete,
                     )
                 }
-            },
+            }
             // once finished render, save them as file
-            Self::Message::RenderComplete(Ok(buffer)) => {
+            Self::Message::RenderComplete(Ok(_buffer)) => {
                 self.state.busy_render = false;
                 iced::Command::none()
                 // iced::Command::perform(
                 //     EngineApp::render_to_file(Arc::new(buffer)),
                 //     Self::Message::RenderSaveComplete,
                 // )
-            },
+            }
             // once finished save, the frame is done, we record the frame rate
             Self::Message::RenderSaveComplete(Ok(())) => {
                 // self.state.ticks += 1;

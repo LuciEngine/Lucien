@@ -2,9 +2,10 @@ use iced::Application;
 
 mod application;
 mod core;
-mod render;
 mod resources;
 mod widgets;
+
+use lucien_render as render;
 
 fn main() -> iced::Result {
     let args = core::cmd::Builder::get_args().get_matches();

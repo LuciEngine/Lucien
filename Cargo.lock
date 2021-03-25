@@ -1514,23 +1514,34 @@ name = "lucien"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "bytemuck",
  "clap",
- "crevice",
  "dirs 3.0.1",
  "futures",
- "glam 0.13.0",
  "iced",
  "iced_futures",
- "iced_graphics",
- "iced_native",
+ "iced_wgpu",
+ "iced_winit",
  "image",
- "mint",
+ "lucien_render",
  "serde",
  "serde_json",
- "shaderc",
  "slog",
  "sloggers",
+ "tobj",
+ "wgpu",
+]
+
+[[package]]
+name = "lucien_render"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bytemuck",
+ "crevice",
+ "glam 0.13.0",
+ "image",
+ "mint",
+ "shaderc",
  "tobj",
  "wgpu",
 ]

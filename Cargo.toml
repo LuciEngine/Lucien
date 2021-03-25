@@ -4,12 +4,20 @@ version = "0.1.0"
 authors = ["knh190 <knh190@hotmail.com>"]
 edition = "2018"
 
+[workspace]
+members = [
+  "render",
+]
+
 [dependencies]
+# 3d render
+lucien_render = { path = "./render" }
+
 # ui
 iced = { version = "0.2.0", features = ["image", "tokio"] }
-iced_native = "0.3"   # events
-iced_graphics = "0.1" # render
 iced_futures = "0.2"
+iced_winit = "0.2"
+iced_wgpu = "0.3"
 
 # logger
 slog = "2.7"
@@ -19,21 +27,13 @@ sloggers = "*"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 
-# graphics (deprecated)
+# image
 image = "0.23"
 
 # render
 tobj = "2.0.4"
-wgpu = "0.6.2" # latest is 0.7.0 but iced uses older version
-shaderc = "0.7"
+wgpu = "0.6.2"
 futures = "0.3"
-
-glam = { version = "0.13", features = ["serde"] } # math
-
-# type cast
-bytemuck = { version = "1.5", feature = "derive" }
-crevice = "0.5"
-mint = "0.5"
 
 # utils
 clap = "2.33" # cmd parser
