@@ -1,3 +1,4 @@
+use anyhow::Result;
 use crate::{AmbientLight, Camera, Material, Model, PointLight};
 
 #[derive(Debug)]
@@ -26,7 +27,7 @@ impl Scene {
         }
     }
 
-    pub fn load(mut self, path: &str, device: &wgpu::Device, queue: &wgpu::Queue) -> Self {
+    pub fn load(mut self, path: &str, device: &wgpu::Device, queue: &wgpu::Queue) -> Result<Self> {
         let (obj_models, obj_materials) = tobj::load_obj(path, true).unwrap();
         obj_models.iter().for_each(|model| {
             self.models.push(Model::new(device, model));
@@ -35,6 +36,6 @@ impl Scene {
             self.materials
                 .push(Material::new(device, queue, material).unwrap());
         });
-        self
+        Ok(self)
     }
 }

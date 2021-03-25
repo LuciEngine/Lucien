@@ -208,7 +208,7 @@ impl RenderState {
     pub fn new(size: [u32; 2], device: &wgpu::Device, queue: &wgpu::Queue) -> Result<Self> {
         use super::buffer::*;
 
-        let scene = Scene::new(device).load("src/examples/data/cube.obj", device, queue);
+        let scene = Scene::new(device).load("src/examples/data/cube.obj", device, queue)?;
         let uniforms = Uniforms::new(&scene, device);
         let depth = DepthTexture::new(device, size[0], size[1], Some("depth_texture"));
         let rt = RenderTexture::new(size[0], size[1], device)

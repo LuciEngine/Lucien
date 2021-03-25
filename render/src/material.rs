@@ -1,7 +1,7 @@
 use anyhow::Result;
 
-use super::buffer::uniform_buffer;
-use super::gpu_data::*;
+use crate::buffer::uniform_buffer;
+use crate::gpu_data::*;
 use crate::Texture;
 
 #[derive(Debug)]
@@ -17,8 +17,10 @@ impl Material {
     pub fn new(
         device: &wgpu::Device, queue: &wgpu::Queue, material: &tobj::Material,
     ) -> Result<Self> {
+        use std::path::Path;
         // let path = format!("data/{}", material.diffuse_texture);
-        let diffuse_texture = Texture::new("src/render/textures/blank.png", device, queue);
+        let abs = Path::new(".").join("render/src/textures/blank.png").canonicalize()?;
+        let diffuse_texture = Texture::new(abs.to_str().unwrap(), device, queue);
         let name = material.name.clone();
         let raw = MaterialRaw::from_tobj(material);
         let buffer = uniform_buffer(raw.as_std140().as_bytes(), device, Some("Material Buffer"));

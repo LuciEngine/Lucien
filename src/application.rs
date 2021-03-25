@@ -156,7 +156,7 @@ impl iced::Application for EngineApp {
     }
 
     fn title(&self) -> String {
-        "Lucien v0.1.0".into()
+        format!("Lucien v{:?}", env!("CARGO_PKG_VERSION")).into()
     }
 
     fn update(&mut self, msg: Self::Message) -> iced::Command<Self::Message> {
