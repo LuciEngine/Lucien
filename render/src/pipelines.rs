@@ -1,9 +1,14 @@
-use super::Vertex;
+use crate::Vertex;
 
 #[derive(Debug, Clone, Copy)]
 pub enum RenderMode {
     Default,
     WireFrame,
+}
+#[derive(Debug, Clone, Copy)]
+pub enum RenderTarget {
+    SwapChain,
+    RenderTexture,
 }
 pub struct Pipeline;
 

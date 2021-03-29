@@ -1,0 +1,19 @@
+[package]
+name = "lucien_render"
+version = "0.1.0"
+authors = ["knh190 <knh190@hotmail.com>"]
+edition = "2018"
+
+[dependencies]
+image = "0.23"
+tobj = "2.0.4"
+
+wgpu = "0.6.2" # latest is 0.7.0 but iced uses older version
+shaderc = "0.7"
+
+glam = { version = "0.13", features = ["serde"] } # math
+bytemuck = "1.5" # type cast
+crevice = "0.5"
+mint = "0.5"
+
+anyhow = "*"

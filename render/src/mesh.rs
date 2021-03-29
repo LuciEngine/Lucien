@@ -1,4 +1,4 @@
-use crate::render::Vertex;
+use crate::Vertex;
 use wgpu::util::DeviceExt;
 
 #[derive(Debug)]
