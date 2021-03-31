@@ -2,7 +2,7 @@ use crate::message::Message;
 use crate::widgets::UserInterface;
 use crate::{Backend, Frontend, GlobalState};
 
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use std::path::PathBuf;
 use std::sync::Arc;
 
@@ -45,18 +45,18 @@ impl Application {
         &self.logger
     }
 
-    pub fn project(&self) -> &Option<Project> {
-        &self.project
+    pub fn project(&self) -> Result<&Project> {
+        match self.project.as_ref() {
+            Some(proj) => Ok(proj),
+            _ => Err(anyhow!("failed to get project")),
+        }
     }
 
-    pub fn loader(&self) -> &dyn core::resources::ResourceLoader {
-        self.project()
-            .as_ref()
-            .unwrap()
-            .loader
-            .as_ref()
-            .unwrap()
-            .as_ref()
+    pub fn loader(&self) -> Result<&dyn core::resources::ResourceLoader> {
+        match self.project()?.loader() {
+            Some(loader) => Ok(loader),
+            _ => Err(anyhow!("failed to get loader")),
+        }
     }
 
     pub fn path(&self, name: &str) -> Option<PathBuf> {
