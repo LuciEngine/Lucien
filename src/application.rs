@@ -61,6 +61,73 @@ pub struct EngineApp {
     renderer: Arc<Renderer>,
 }
 
+use iced_native::program::Program;
+use iced_winit::{ Command, Subscription, Mode, Color, };
+pub trait Application : Program {
+    type Flags;
+
+    fn new(flags: Self::Flags) -> (Self, Command<Self::Message>);
+
+    fn title(&self) -> String;
+
+    fn subscription(&self) -> Subscription<Self::Message> {
+        Subscription::none()
+    }
+
+    fn mode(&self) -> Mode {
+        Mode::Windowed
+    }
+
+    fn background_color(&self) -> Color {
+        Color::WHITE
+    }
+
+    fn scale_factor(&self) -> f64 {
+        1.0
+    }
+}
+
+// run an application
+// takes integrated state
+pub fn _run() {
+    use iced_winit::winit;
+    use iced_futures::Runtime;
+    use iced_winit::Proxy;
+
+    use winit::{
+        event_loop::{ControlFlow, EventLoop},
+    };
+    use crate::ui::widgets::MainInterface;
+    use crate::ui::{IntegrateState, Backend, Frontend};
+
+    // create event loop
+    //   https://docs.rs/winit/0.24.0/winit/event_loop/struct.EventLoopProxy.html
+    let event_loop = EventLoop::new();
+    let mut glob = IntegrateState::new(&event_loop);
+    let mut backend = Backend::new(&glob);
+    let mut frontend = Frontend::new(&glob, MainInterface::new());
+
+    // use proxy to send custom events
+    let proxy = event_loop.create_proxy();
+    let mut runtime = {
+        let proxy = Proxy::new(event_loop.create_proxy());
+        let executor = iced_futures::executor::Tokio::new().unwrap();
+
+        Runtime::new(executor, proxy)
+    };
+    // use runtime to track executor & subscription `iced_futures::Runtime`
+    //   https://docs.rs/iced_futures/0.2.0/iced_futures/struct.Runtime.html
+    // create winit window
+    // create event sender, send event in event_loop
+
+    // create instance closure (surface, sc, receiver, etc.)
+    // use it to actually handle the event loop
+}
+
+async fn _run_instance() {
+
+}
+
 // Set runtime context here, including:
 // the project it is using, etc.
 #[allow(dead_code)]

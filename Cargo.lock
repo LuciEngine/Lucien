@@ -1530,6 +1530,7 @@ dependencies = [
  "slog",
  "sloggers",
  "tobj",
+ "tokio",
  "wgpu",
 ]
 
