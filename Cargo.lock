@@ -1514,24 +1514,10 @@ name = "lucien"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "clap",
- "dirs 3.0.1",
- "futures",
- "iced",
- "iced_futures",
- "iced_native",
- "iced_wgpu",
- "iced_winit",
- "image",
  "lucien_app",
+ "lucien_core",
  "lucien_render",
- "serde",
- "serde_json",
  "slog",
- "sloggers",
- "tobj",
- "tokio",
- "wgpu",
 ]
 
 [[package]]
@@ -1546,6 +1532,21 @@ dependencies = [
  "iced_winit",
  "lucien_render",
  "wgpu",
+]
+
+[[package]]
+name = "lucien_core"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "dirs 3.0.1",
+ "image",
+ "serde",
+ "serde_json",
+ "slog",
+ "sloggers",
+ "tobj",
 ]
 
 [[package]]

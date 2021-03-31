@@ -1,5 +1,5 @@
+use anyhow::{Context, Result};
 use lucien_render as render;
-use anyhow::{Result, Context};
 
 use iced_native::program;
 use iced_wgpu::Renderer as IcedRenderer;
@@ -8,17 +8,13 @@ use iced_winit::{conversion, futures, winit, Debug, Size};
 
 use futures::executor::block_on;
 use futures::task::SpawnExt;
-use winit::{
-    dpi::PhysicalPosition,
-    event::ModifiersState,
-    event_loop::EventLoop,
-};
+use winit::{dpi::PhysicalPosition, event::ModifiersState, event_loop::EventLoop};
 
-pub mod widgets;
-pub mod message;
 pub mod application;
-use widgets::UserInterface;
+pub mod message;
+pub mod widgets;
 use message::Message;
+use widgets::UserInterface;
 
 #[allow(dead_code)]
 async fn init_headless() -> Result<(wgpu::Device, wgpu::Queue)> {
@@ -188,9 +184,11 @@ impl Frontend {
     }
 
     pub fn render(
-        &mut self, glob: &GlobalState, target: &wgpu::SwapChainTexture, backend: &Backend
+        &mut self, glob: &GlobalState, target: &wgpu::SwapChainTexture, backend: &Backend,
     ) -> Result<()> {
-        let mut encoder = backend.renderer.create_encoder(Some("UI Encoder"), &glob.device);
+        let mut encoder = backend
+            .renderer
+            .create_encoder(Some("UI Encoder"), &glob.device);
         let mouse_interaction = self.renderer.backend_mut().draw(
             &glob.device,
             &mut self.staging_belt,
@@ -234,20 +232,19 @@ impl Backend {
         Ok(())
     }
 
-    pub fn render(&mut self, glob: &GlobalState, target: &wgpu::SwapChainTexture, frontend: &Frontend) -> Result<()> {
+    pub fn render(
+        &mut self, glob: &GlobalState, target: &wgpu::SwapChainTexture, frontend: &Frontend,
+    ) -> Result<()> {
         // update render settings from frontend
         // todo more useful changes
         self.settings.clear_color = Some(frontend.state.program().background_color());
         // resize to actual current window size
-        self.renderer.state.resize(glob.get_size(), &glob.device).context("Resize 3D renderer")?;
+        self.renderer
+            .state
+            .resize(glob.get_size(), &glob.device)
+            .context("Resize 3D renderer")?;
         // render using updated settings
-        self
-        .renderer
-        .render_external(
-            target,
-            &self.settings,
-            &glob.device,
-            &glob.queue,
-        )
+        self.renderer
+            .render_external(target, &self.settings, &glob.device, &glob.queue)
     }
 }

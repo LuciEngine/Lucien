@@ -5,15 +5,16 @@ authors = ["knh190 <knh190@hotmail.com>"]
 edition = "2018"
 
 [dependencies]
-image = "0.23"
-tobj = "2.0.4"
-
+# resource
+image = "0.23" # convert images
+tobj = "2.0.4" # convert models
+# gpu
 wgpu = "0.6.2" # latest is 0.7.0 but iced uses older version
-shaderc = "0.7"
+shaderc = "0.7" # compile shader
 
 glam = { version = "0.13", features = ["serde"] } # math
 bytemuck = "1.5" # type cast
 crevice = "0.5"
 mint = "0.5"
-
+# error handle
 anyhow = "*"

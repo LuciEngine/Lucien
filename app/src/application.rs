@@ -1,10 +1,10 @@
-use crate::widgets::UserInterface;
-use crate::{GlobalState, Backend, Frontend};
 use crate::message::Message;
+use crate::widgets::UserInterface;
+use crate::{Backend, Frontend, GlobalState};
 
 use iced_winit::winit;
 use winit::{
-    event::{ Event, WindowEvent },
+    event::{Event, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
 };
 
@@ -13,8 +13,7 @@ use anyhow::Result;
 // run an application
 // todo make this a trait so you can customize the application
 // todo generic Message type
-pub struct Application {
-}
+pub struct Application {}
 
 impl Application {
     pub fn run() -> Result<()> {
@@ -84,9 +83,13 @@ impl Application {
                     let frame = &glob.sc.get_current_frame().expect("Next frame failed");
                     {
                         // 3D render
-                        backend.render(&glob, &frame.output, &frontend).expect("3D render failed");
+                        backend
+                            .render(&glob, &frame.output, &frontend)
+                            .expect("3D render failed");
                         // UI render
-                        frontend.render(&glob, &frame.output, &backend).expect("UI render failed");
+                        frontend
+                            .render(&glob, &frame.output, &backend)
+                            .expect("UI render failed");
                     }
                 }
                 Event::WindowEvent { event, .. } => {
