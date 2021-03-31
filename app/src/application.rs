@@ -23,6 +23,7 @@ use lucien_core::resources::Project;
 pub struct Application {
     // logger can be shared by threads
     logger: Arc<core::Logger>,
+    // project can be shared too?
     project: Option<Project>,
 }
 
@@ -49,7 +50,7 @@ impl Application {
     }
 
     pub fn loader(&self) -> &dyn core::resources::ResourceLoader {
-        self.project
+        self.project()
             .as_ref()
             .unwrap()
             .loader
@@ -83,12 +84,18 @@ impl Application {
             }
         });
         // cache engine customized events
+        // thank goodness we don't have event loops on
+        // different threads so we don't need to use an
+        // asynchronous channel for messages
         let mut messages: Vec<Message> = Vec::new();
 
-        // main loop to handle native winit events + engine events
+        // main loop to [produce, handle, and consume]
+        // native window events + engine events
         info!(&self.logger, "Running main loop.");
 
         event_loop.run(move |event, _, control_flow| {
+            // when events are all handled, wait until next event arrives
+            // WaitUntil can be useful but I didn't know it was there before
             *control_flow = ControlFlow::Wait;
 
             // todo synchronize frame rate, drop frame if something takes too long
@@ -106,6 +113,8 @@ impl Application {
                     if !messages.is_empty() {
                         for msg in messages.drain(..) {
                             match msg {
+                                // here is where scene update should happen
+                                // yes, you only ask the window to redraw on each tick
                                 Message::Tick => {
                                     backend.update(&glob).expect("3D update");
                                     glob.window.request_redraw();
@@ -115,11 +124,11 @@ impl Application {
                             }
                         }
                     }
+                    // consume ui events
                     if !frontend.state.is_queue_empty() {
                         // update UI size and cursor position
                         // drawing doesn't happen immediately until we call `render`
                         frontend.update(&glob).expect("UI update");
-                        glob.window.request_redraw();
                     }
                 }
                 // render
@@ -131,7 +140,7 @@ impl Application {
                         glob.resized = false;
                     };
                     // draw frame for backend + frontend
-                    let frame = &glob.sc.get_current_frame().expect("Next frame failed");
+                    let frame = &glob.sc.get_current_frame().expect("Get next frame failed");
                     {
                         // 3D render
                         backend

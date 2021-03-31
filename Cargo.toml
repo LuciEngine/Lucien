@@ -9,12 +9,14 @@ members = [
   "app",
   "core",
   "render",
+  "vm",
 ]
 
 [dependencies]
-lucien_render = { path = "./render" }
-lucien_app = { path = "./app" }
-lucien_core = { path = "./core" }
+lucien_render = { path = "render" }
+lucien_app    = { path = "app" }
+lucien_core   = { path = "core" }
+lucien_vm     = { path = "vm" }
 
 # logger
 slog = "2.7"
