@@ -11,7 +11,9 @@ use backend::*;
 use frontend::*;
 use global_state::*;
 
-pub mod application;
+mod application;
+pub use application::*;
+
 pub mod message;
 pub mod widgets;
 

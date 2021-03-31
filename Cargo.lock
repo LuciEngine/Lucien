@@ -1532,6 +1532,7 @@ dependencies = [
  "iced_winit",
  "lucien_core",
  "lucien_render",
+ "slog",
  "wgpu",
 ]
 

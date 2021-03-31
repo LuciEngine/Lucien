@@ -2,23 +2,66 @@ use crate::message::Message;
 use crate::widgets::UserInterface;
 use crate::{Backend, Frontend, GlobalState};
 
-use iced_winit::winit;
+use anyhow::{Result, Context};
+use std::sync::Arc;
+use std::path::PathBuf;
+
+use iced_winit::{winit, conversion};
 use winit::{
     event::{Event, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
 };
 
-use lucien_core as core;
+use slog::info;
 
-use anyhow::Result;
+use lucien_core as core;
+use lucien_core::resources::Project;
 
 // run an application
 // todo make this a trait so you can customize the application
 // todo generic Message type
-pub struct Application {}
+pub struct Application {
+    // logger can be shared by threads
+    logger: Arc<core::Logger>,
+    project: Option<Project>,
+}
 
 impl Application {
-    pub fn run() -> Result<()> {
+    pub fn new(args: &core::ArgFlags) -> Result<Self> {
+        let root = args.value_of("project").unwrap();
+        let logger = Arc::new(core::logger::CoreLogBuilder::new().get_logger());
+        let mut proj = Project::new(Arc::clone(&logger)).base_dir(root);
+        proj.create_or_load().context("Failed to create or load project")?;
+
+        Ok(Self {
+            logger,
+            project: Some(proj),
+        })
+    }
+
+    pub fn logger(&self) -> &Arc<core::Logger> {
+        &self.logger
+    }
+
+    pub fn project(&self) -> &Option<Project> {
+        &self.project
+    }
+
+    pub fn loader(&self) -> &dyn core::resources::ResourceLoader {
+        self.project
+            .as_ref()
+            .unwrap()
+            .loader
+            .as_ref()
+            .unwrap()
+            .as_ref()
+    }
+
+    pub fn path(&self, name: &str) -> Option<PathBuf> {
+        self.project.as_ref().unwrap().path(name)
+    }
+
+    pub fn run(&mut self) -> Result<()> {
         // create event loop
         let event_loop = EventLoop::<Message>::with_user_event();
 
@@ -26,6 +69,7 @@ impl Application {
         let mut glob = GlobalState::new(&event_loop);
         let mut backend = Backend::new(&glob);
         let mut frontend = Frontend::new(&glob, UserInterface::new());
+        info!(&self.logger, "Window creation successful.");
 
         // wake up main loop on tick and dispatch a custom event
         // from a different thread.
@@ -41,6 +85,8 @@ impl Application {
         let mut messages: Vec<Message> = Vec::new();
 
         // main loop to handle native winit events + engine events
+        info!(&self.logger, "Running main loop.");
+
         event_loop.run(move |event, _, control_flow| {
             *control_flow = ControlFlow::Wait;
 
@@ -96,7 +142,8 @@ impl Application {
                 }
                 Event::WindowEvent { event, .. } => {
                     // handle window events, changes states in glob so UI + backend
-                    // could access the changes.
+                    // could access the changes. No actual changes are made, until
+                    // they are consumed above.
                     match event {
                         WindowEvent::CursorMoved { position, .. } => {
                             frontend.cursor_position = position;
@@ -114,7 +161,7 @@ impl Application {
                         _ => {}
                     };
                     // Send window event to iced event
-                    if let Some(event) = iced_winit::conversion::window_event(
+                    if let Some(event) = conversion::window_event(
                         &event,
                         glob.window.scale_factor(),
                         frontend.modifiers,

@@ -16,5 +16,7 @@ iced_native = "0.3"
 iced_winit = "0.2"
 iced_wgpu = "0.3"
 
+slog = "2.7"
+
 anyhow = "*" # handle error
 wgpu = "0.6.2"

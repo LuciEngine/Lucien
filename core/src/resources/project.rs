@@ -2,6 +2,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use slog::{error, info};
+use anyhow::Result;
 
 use crate::resources::{DefaultLoader, ResourceLoader};
 
@@ -48,7 +49,7 @@ impl Project {
     }
 
     // create project or load from existing
-    pub fn create_or_load(&mut self) -> &mut Self {
+    pub fn create_or_load(&mut self) -> Result<()> {
         let root = self.absolute_path().unwrap();
         if !root.exists() {
             // create project directory
@@ -58,7 +59,7 @@ impl Project {
                 }
                 Err(_) => {
                     error!(self.logger, "project creation error: {:?}", root);
-                    return self;
+                    return Err(anyhow::anyhow!(""));
                 }
             }
         } else {
@@ -68,7 +69,7 @@ impl Project {
         let loader = Box::new(DefaultLoader::new(root));
         self.loader = Some(loader);
 
-        self
+        Ok(())
     }
 
     // change base directory
