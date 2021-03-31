@@ -1530,6 +1530,7 @@ dependencies = [
  "iced_native",
  "iced_wgpu",
  "iced_winit",
+ "lucien_core",
  "lucien_render",
  "wgpu",
 ]

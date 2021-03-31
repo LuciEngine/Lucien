@@ -8,6 +8,8 @@ use winit::{
     event_loop::{ControlFlow, EventLoop},
 };
 
+use lucien_core as core;
+
 use anyhow::Result;
 
 // run an application
