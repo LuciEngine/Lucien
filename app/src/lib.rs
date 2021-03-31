@@ -15,7 +15,10 @@ use winit::{
 };
 
 pub mod widgets;
-use widgets::MainInterface;
+pub mod message;
+pub mod application;
+use widgets::UserInterface;
+use message::Message;
 
 #[allow(dead_code)]
 async fn init_headless() -> Result<(wgpu::Device, wgpu::Queue)> {
@@ -61,7 +64,7 @@ async fn init_with_window(
 }
 
 // Resize swap chain texture size
-pub fn create_swap_chain(
+fn create_swap_chain(
     window: &winit::window::Window, device: &wgpu::Device, surface: &wgpu::Surface,
 ) -> Result<wgpu::SwapChain> {
     let swap_chain = {
@@ -81,7 +84,7 @@ pub fn create_swap_chain(
     Ok(swap_chain)
 }
 
-pub struct IntegrateState {
+struct GlobalState {
     pub window: winit::window::Window,
     pub viewport: Viewport,
     pub device: wgpu::Device,
@@ -91,8 +94,8 @@ pub struct IntegrateState {
     pub resized: bool,
 }
 
-impl IntegrateState {
-    pub fn new(event_loop: &EventLoop<()>) -> Self {
+impl GlobalState {
+    pub fn new(event_loop: &EventLoop<Message>) -> Self {
         let window = winit::window::Window::new(event_loop).unwrap();
         let size = window.inner_size();
         let viewport =
@@ -123,20 +126,25 @@ impl IntegrateState {
         );
         self.viewport = viewport;
     }
+
+    pub fn resize(&mut self) -> Result<()> {
+        self.sc = create_swap_chain(&self.window, &self.device, &self.surface)?;
+        Ok(())
+    }
 }
 
-pub struct Frontend {
+struct Frontend {
     pub cursor_position: PhysicalPosition<f64>,
     pub modifiers: ModifiersState,
     staging_belt: wgpu::util::StagingBelt,
     local_pool: futures::executor::LocalPool,
     debug: Debug,
     pub renderer: IcedRenderer,
-    pub state: program::State<MainInterface>,
+    pub state: program::State<UserInterface>,
 }
 
 impl Frontend {
-    pub fn new(glob: &IntegrateState, ui: MainInterface) -> Self {
+    pub fn new(glob: &GlobalState, ui: UserInterface) -> Self {
         use iced_wgpu::{Backend, Settings};
 
         let cursor_position = PhysicalPosition::new(-1.0, -1.0);
@@ -167,7 +175,8 @@ impl Frontend {
         }
     }
 
-    pub fn update(&mut self, glob: &IntegrateState) -> Result<()> {
+    // update UI on window event, the event changes are stored in glob
+    pub fn update(&mut self, glob: &GlobalState) -> Result<()> {
         self.state.update(
             glob.viewport.logical_size(),
             conversion::cursor_position(self.cursor_position, glob.viewport.scale_factor()),
@@ -179,9 +188,9 @@ impl Frontend {
     }
 
     pub fn render(
-        &mut self, glob: &IntegrateState, target: &wgpu::SwapChainTexture,
-        mut encoder: wgpu::CommandEncoder,
+        &mut self, glob: &GlobalState, target: &wgpu::SwapChainTexture, backend: &Backend
     ) -> Result<()> {
+        let mut encoder = backend.renderer.create_encoder(Some("UI Encoder"), &glob.device);
         let mouse_interaction = self.renderer.backend_mut().draw(
             &glob.device,
             &mut self.staging_belt,
@@ -191,37 +200,54 @@ impl Frontend {
             self.state.primitive(),
             &self.debug.overlay(),
         );
-        // Then we submit the work
+        // submit the work
         self.staging_belt.finish();
         glob.queue.submit(Some(encoder.finish()));
-        // And recall staging buffers
+        // recall staging buffers
         self.local_pool
             .spawner()
             .spawn(self.staging_belt.recall())
             .expect("Recall staging buffers");
         self.local_pool.run_until_stalled();
-        // Update the mouse cursor
+        // update the mouse cursor
         glob.window
             .set_cursor_icon(iced_winit::conversion::mouse_interaction(mouse_interaction));
         Ok(())
     }
 }
 
-pub struct Backend {
+struct Backend {
     pub settings: render::RenderSettings,
     pub renderer: render::Renderer,
 }
 
 impl Backend {
-    pub fn new(glob: &IntegrateState) -> Self {
+    pub fn new(glob: &GlobalState) -> Self {
         let settings = render::RenderSettings::new(glob.get_size());
         let renderer = render::Renderer::new(&glob.device, &glob.queue, &settings).unwrap();
 
         Self { settings, renderer }
     }
 
-    pub fn update(&mut self, glob: &IntegrateState) -> Result<()> {
+    pub fn update(&mut self, glob: &GlobalState) -> Result<()> {
         self.renderer.update(&glob.device, &glob.queue);
         Ok(())
+    }
+
+    pub fn render(&mut self, glob: &GlobalState, target: &wgpu::SwapChainTexture, frontend: &Frontend) -> Result<()> {
+        // update render settings from frontend
+        // todo more useful changes
+        self.settings.clear_color = Some(frontend.state.program().background_color());
+        // resize to actual current window size
+        self.renderer.state.resize(glob.get_size(), &glob.device).context("Resize 3D renderer")?;
+        // render using updated settings
+        self
+        .renderer
+        .render_external(
+            target,
+            &self.settings,
+            &glob.device,
+            &glob.queue,
+        )
     }
 }

@@ -1,5 +1,5 @@
 [package]
-name = "lucien_ui"
+name = "lucien_app"
 version = "0.1.0"
 authors = ["knh190 <knh190@hotmail.com>"]
 edition = "2018"
@@ -7,7 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-lucien_render = { version = "0.1.0", path = "../render" }
+lucien_render = { path = "../render" }
 
 iced = { version = "0.2.0", features = ["image", "tokio"] }
 iced_futures = "0.2"

@@ -4,11 +4,8 @@ use std::sync::Arc;
 use iced::scrollable;
 
 // use crate::core::logger;
-// use crate::core::message;
 use crate::render::{RenderSettings, Renderer};
 use crate::resources::{Project, ResourceLoader};
-
-// use futures::executor::block_on;
 
 pub struct Settings;
 
@@ -61,73 +58,6 @@ pub struct EngineApp {
     renderer: Arc<Renderer>,
 }
 
-use iced_native::program::Program;
-use iced_winit::{ Command, Subscription, Mode, Color, };
-pub trait Application : Program {
-    type Flags;
-
-    fn new(flags: Self::Flags) -> (Self, Command<Self::Message>);
-
-    fn title(&self) -> String;
-
-    fn subscription(&self) -> Subscription<Self::Message> {
-        Subscription::none()
-    }
-
-    fn mode(&self) -> Mode {
-        Mode::Windowed
-    }
-
-    fn background_color(&self) -> Color {
-        Color::WHITE
-    }
-
-    fn scale_factor(&self) -> f64 {
-        1.0
-    }
-}
-
-// run an application
-// takes integrated state
-pub fn _run() {
-    use iced_winit::winit;
-    use iced_futures::Runtime;
-    use iced_winit::Proxy;
-
-    use winit::{
-        event_loop::{ControlFlow, EventLoop},
-    };
-    use crate::ui::widgets::MainInterface;
-    use crate::ui::{IntegrateState, Backend, Frontend};
-
-    // create event loop
-    //   https://docs.rs/winit/0.24.0/winit/event_loop/struct.EventLoopProxy.html
-    let event_loop = EventLoop::new();
-    let mut glob = IntegrateState::new(&event_loop);
-    let mut backend = Backend::new(&glob);
-    let mut frontend = Frontend::new(&glob, MainInterface::new());
-
-    // use proxy to send custom events
-    let proxy = event_loop.create_proxy();
-    let mut runtime = {
-        let proxy = Proxy::new(event_loop.create_proxy());
-        let executor = iced_futures::executor::Tokio::new().unwrap();
-
-        Runtime::new(executor, proxy)
-    };
-    // use runtime to track executor & subscription `iced_futures::Runtime`
-    //   https://docs.rs/iced_futures/0.2.0/iced_futures/struct.Runtime.html
-    // create winit window
-    // create event sender, send event in event_loop
-
-    // create instance closure (surface, sc, receiver, etc.)
-    // use it to actually handle the event loop
-}
-
-async fn _run_instance() {
-
-}
-
 // Set runtime context here, including:
 // the project it is using, etc.
 #[allow(dead_code)]
@@ -166,101 +96,4 @@ impl EngineApp {
     //         renderer,
     //     })
     // }
-
-    // async fn render_to_buffer(
-    //     renderer: Arc<Renderer>, settings: Arc<RenderSettings>,
-    // ) -> Result<RgbaBuffer, Error> {
-    //     renderer.render(&settings, &device, &queue).context("Failed to render.")?;
-    //     renderer
-    //         .read_to_buffer()
-    //         .context("Failed to write to render buffer.")?;
-    //     // @todo this buffer convert is slow
-    //     let buffer = renderer
-    //         .as_rgba()
-    //         .await
-    //         .context("Failed to convert to rgba.")?;
-    //     Ok(buffer)
-    // }
-    //
-    // async fn render_to_file(buffer: Arc<RgbaBuffer>) -> Result<()> {
-    //     buffer.save("window.png")?;
-    //     Ok(())
-    // }
 }
-
-// impl iced::Application for EngineApp {
-//     // thread pool runs commands and subscriptions.
-//     type Executor = iced::executor::Default;
-//     // events used by the engine.
-//     type Message = message::Message;
-//     // command line flags.
-//     type Flags = clap::ArgMatches<'static>;
-//
-//     fn new(args: Self::Flags) -> (Self, iced::Command<Self::Message>) {
-//         (EngineApp::with_args(args).unwrap(), iced::Command::none())
-//     }
-//
-//     fn title(&self) -> String {
-//         format!("Lucien v{:?}", env!("CARGO_PKG_VERSION")).into()
-//     }
-//
-//     fn update(&mut self, msg: Self::Message) -> iced::Command<Self::Message> {
-//         match msg {
-//             Self::Message::Tick => {
-//                 if self.state.ticks >= 100 {
-//                     self.state.ticks = 0;
-//                 }
-//                 // update game logic
-//                 // in a separate thread, not in the main thread
-//                 // iced::Command::perform(
-//                 //     EngineApp::render_update(self.renderer.clone()),
-//                 //     Self::Message::UpdateComplete,
-//                 // );
-//
-//                 // if it's busy, don't commit anything, this ensures the render
-//                 // operation is only executed one at a time; otherwise, the thread
-//                 // will panic.
-//                 if self.state.busy_render {
-//                     iced::Command::none()
-//                 } else {
-//                     self.state.busy_render = true;
-//                     self.state.ticks += 1;
-//
-//                     iced::Command::perform(
-//                         EngineApp::render_to_buffer(
-//                             self.renderer.clone(),
-//                             self.render_settings.clone(),
-//                         ),
-//                         Self::Message::RenderComplete,
-//                     )
-//                 }
-//             }
-//             // once finished render, save them as file
-//             Self::Message::RenderComplete(Ok(_buffer)) => {
-//                 self.state.busy_render = false;
-//                 iced::Command::none()
-//                 // iced::Command::perform(
-//                 //     EngineApp::render_to_file(Arc::new(buffer)),
-//                 //     Self::Message::RenderSaveComplete,
-//                 // )
-//             }
-//             // once finished save, the frame is done, we record the frame rate
-//             Self::Message::RenderSaveComplete(Ok(())) => {
-//                 // self.state.ticks += 1;
-//                 iced::Command::none()
-//             }
-//             _ => iced::Command::none(),
-//         }
-//     }
-//
-//     // ~100 fps
-//     fn subscription(&self) -> Subscription<Self::Message> {
-//         // todo set self.state idle or update
-//         iced_futures::time::every(std::time::Duration::from_millis(10)).map(|_| Self::Message::Tick)
-//     }
-//
-//     // refresh window on message
-//     fn view(&mut self) -> iced::Element<Self::Message> {
-//         crate::widgets::main_window(&self.state)
-//     }
-// }
