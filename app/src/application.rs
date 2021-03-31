@@ -2,11 +2,11 @@ use crate::message::Message;
 use crate::widgets::UserInterface;
 use crate::{Backend, Frontend, GlobalState};
 
-use anyhow::{Result, Context};
-use std::sync::Arc;
+use anyhow::{Context, Result};
 use std::path::PathBuf;
+use std::sync::Arc;
 
-use iced_winit::{winit, conversion};
+use iced_winit::{conversion, winit};
 use winit::{
     event::{Event, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
@@ -31,7 +31,8 @@ impl Application {
         let root = args.value_of("project").unwrap();
         let logger = Arc::new(core::logger::CoreLogBuilder::new().get_logger());
         let mut proj = Project::new(Arc::clone(&logger)).base_dir(root);
-        proj.create_or_load().context("Failed to create or load project")?;
+        proj.create_or_load()
+            .context("Failed to create or load project")?;
 
         Ok(Self {
             logger,
@@ -94,6 +95,8 @@ impl Application {
             match event {
                 // *handle* user customized events,
                 // cache them in a vector so we *consume* them later;
+                // if it is required to be async, then use something like
+                // tokio::sync::mpsc as the async channel
                 Event::UserEvent(msg) => {
                     messages.push(msg);
                 }

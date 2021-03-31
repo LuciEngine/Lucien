@@ -1,8 +1,8 @@
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use slog::{error, info};
 use anyhow::Result;
+use slog::{error, info};
 
 use crate::resources::{DefaultLoader, ResourceLoader};
 
