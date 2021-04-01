@@ -76,9 +76,9 @@ impl MaterialRaw {
 impl Default for MaterialRaw {
     fn default() -> Self {
         Self {
-            ambient: vector3_zero(),
-            diffuse: vector3_zero(),
-            specular: vector3_zero(),
+            ambient: vector3_one(),
+            diffuse: vector3_one(),
+            specular: vector3_half(),
             shininess: 0.0,
         }
     }
@@ -107,6 +107,17 @@ pub fn vec3_to_raw(v: &Vec3) -> Vector3<f32> {
     Vector3::from_slice(v.as_ref())
 }
 
+#[allow(dead_code)]
 fn vector3_zero() -> Vector3<f32> {
     Vector3::from_slice(&[0.0, 0.0, 0.0])
+}
+
+#[allow(dead_code)]
+fn vector3_half() -> Vector3<f32> {
+    Vector3::from_slice(&[0.5, 0.5, 0.5])
+}
+
+#[allow(dead_code)]
+fn vector3_one() -> Vector3<f32> {
+    Vector3::from_slice(&[1.0, 1.0, 1.0])
 }

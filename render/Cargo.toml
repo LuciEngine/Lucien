@@ -20,5 +20,7 @@ crevice = "0.5"
 mint = "0.5"
 # time
 time = "0.2"
+# logger
+slog = "2.7"
 # error handle
 anyhow = "*"

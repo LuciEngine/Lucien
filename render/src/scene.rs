@@ -2,6 +2,8 @@ use crate::{AmbientLight, Camera, Material, Model, PointLight};
 use anyhow::Result;
 
 use lucien_core::resources::ResourceLoader;
+use lucien_core::{logger::CoreLogBuilder, Logger};
+use slog::warn;
 
 #[derive(Debug)]
 pub struct Scene {
@@ -10,6 +12,7 @@ pub struct Scene {
     pub ambient_light: AmbientLight,
     pub models: Vec<Model>,
     pub materials: Vec<Material>,
+    logger: Logger,
 }
 
 impl Scene {
@@ -19,6 +22,7 @@ impl Scene {
         let camera = Camera::default();
         let light = PointLight::default(device);
         let ambient_light = AmbientLight::default();
+        let logger = CoreLogBuilder::new().get_logger();
 
         Ok(Self {
             camera,
@@ -26,6 +30,7 @@ impl Scene {
             ambient_light,
             models,
             materials,
+            logger,
         })
     }
 
@@ -44,13 +49,15 @@ impl Scene {
         // if material is missing from the file, use default
         let n_models = obj_models.len();
         let n_materials = obj_materials.len();
-        if n_models < n_materials {
+        if n_models > n_materials {
+            let msg = format!("material missing from file {}, use default", path);
+            warn!(self.logger, "{}", msg);
             for _ in 0..(n_models - n_materials) {
                 self.materials.push(Material::default(device, queue)?);
             }
         }
         assert!(
-            obj_models.len() == obj_materials.len(),
+            self.materials.len() == self.models.len(),
             "Models and materials count not equal!"
         );
 

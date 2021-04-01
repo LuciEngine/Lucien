@@ -8,11 +8,13 @@ use crate::Texture;
 #[derive(Debug)]
 pub struct Material {
     pub diffuse_texture: Texture,
+    // todo diffuse color, specular + shininess
     pub name: String,
     pub buffer: wgpu::Buffer,
     pub bind_group_layout: wgpu::BindGroupLayout,
     pub bind_group: wgpu::BindGroup,
 }
+struct MaterialExt;
 
 impl Material {
     pub fn new(
@@ -59,7 +61,6 @@ impl Material {
     }
 }
 
-struct MaterialExt;
 impl MaterialExt {
     pub fn layout(
         name: &str, buffer: &wgpu::Buffer, device: &wgpu::Device,

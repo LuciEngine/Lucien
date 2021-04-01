@@ -55,7 +55,7 @@ impl Renderer {
         // todo remove hard code
         let scene = Scene::new(device)
             .context("Failed to create scene")?
-            .load("cube.obj", device, queue, loader.as_ref())
+            .load("bunny.obj", device, queue, loader.as_ref())
             .context("Failed to load scene")?;
         let state =
             RenderState::new(size, &device, scene).context("Failed to create render state")?;
@@ -73,13 +73,16 @@ impl Renderer {
                 bind_group_layouts: &bind_group_layouts[..],
                 push_constant_ranges: &[],
             });
-        let textured_pipeline = Pipeline::textured(&render_pipeline_layout, &device);
-        let wireframe_pipeline = Pipeline::wireframe(&render_pipeline_layout, &device);
+        let default_shader = "shaders/normal";
+        let textured_pipeline =
+            Pipeline::textured(&render_pipeline_layout, &device, default_shader, loader.clone())
+                .context("Failed to create pipeline")?;
+        let wireframe_pipeline =
+            Pipeline::wireframe(&render_pipeline_layout, &device, default_shader, loader.clone())
+                .context("Failed to create pipeline")?;
 
         Ok(Self {
             size,
-            // device,
-            // queue,
             textured_pipeline,
             wireframe_pipeline,
             state,
@@ -119,6 +122,7 @@ impl Renderer {
             let material = &self.state.scene.materials[mesh.material];
 
             render_pass.set_pipeline(&self.textured_pipeline);
+            // render_pass.set_pipeline(&self.wireframe_pipeline);
             render_pass.set_bind_group(0, &self.state.uniforms.bind_group, &[]);
             render_pass.set_bind_group(1, &material.diffuse_texture.group, &[]);
             render_pass.set_bind_group(2, &material.bind_group, &[]);

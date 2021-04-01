@@ -18,7 +18,7 @@ pub(crate) struct Frontend {
 }
 
 impl Frontend {
-    pub fn new(glob: &GlobalState, ui: UserInterface) -> Self {
+    pub fn new(glob: &GlobalState, ui: UserInterface) -> Result<Self> {
         use iced_wgpu::{Backend, Settings};
 
         let cursor_position = PhysicalPosition::new(-1.0, -1.0);
@@ -38,7 +38,7 @@ impl Frontend {
             &mut debug,
         );
 
-        Self {
+        Ok(Self {
             cursor_position,
             modifiers,
             staging_belt,
@@ -46,7 +46,7 @@ impl Frontend {
             debug,
             renderer,
             state,
-        }
+        })
     }
 
     // update UI on window event, the event changes are stored in glob

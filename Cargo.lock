@@ -1664,6 +1664,7 @@ dependencies = [
  "lucien_core",
  "mint",
  "shaderc",
+ "slog",
  "time 0.2.25",
  "tobj",
  "wgpu",

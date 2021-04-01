@@ -14,17 +14,17 @@ pub(crate) struct Backend {
 }
 
 impl Backend {
-    pub fn new(glob: &GlobalState, loader: Arc<dyn ResourceLoader>) -> Self {
+    pub fn new(glob: &GlobalState, loader: Arc<dyn ResourceLoader>) -> Result<Self> {
+        let ld = Arc::clone(&loader);
         let settings = render::RenderSettings::new(glob.get_size());
-        let renderer =
-            render::Renderer::new(&glob.device, &glob.queue, &settings, Arc::clone(&loader))
-                .unwrap();
+        let renderer = render::Renderer::new(&glob.device, &glob.queue, &settings, ld)
+            .context("Failed to create 3D renderer")?;
 
-        Self {
+        Ok(Self {
             settings,
             renderer,
             loader,
-        }
+        })
     }
 
     pub fn update(&mut self, glob: &GlobalState) -> Result<()> {
