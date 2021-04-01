@@ -1,0 +1,50 @@
+use crate::{Frontend, GlobalState};
+use anyhow::{Context, Result};
+use iced_wgpu::wgpu;
+
+use lucien_core::resources::ResourceLoader;
+use lucien_render as render;
+
+use std::sync::Arc;
+
+pub(crate) struct Backend {
+    pub settings: render::RenderSettings,
+    pub renderer: render::Renderer,
+    pub loader: Arc<dyn ResourceLoader>,
+}
+
+impl Backend {
+    pub fn new(glob: &GlobalState, loader: Arc<dyn ResourceLoader>) -> Result<Self> {
+        let ld = Arc::clone(&loader);
+        let settings = render::RenderSettings::new(glob.get_size());
+        let renderer = render::Renderer::new(&glob.device, &glob.queue, &settings, ld)
+            .context("Failed to create 3D renderer")?;
+
+        Ok(Self {
+            settings,
+            renderer,
+            loader,
+        })
+    }
+
+    pub fn update(&mut self, glob: &GlobalState) -> Result<()> {
+        self.renderer.update(&glob.device, &glob.queue);
+        Ok(())
+    }
+
+    pub fn render(
+        &mut self, glob: &GlobalState, target: &wgpu::SwapChainTexture, frontend: &Frontend,
+    ) -> Result<()> {
+        // update render settings from frontend
+        // todo more useful changes
+        self.settings.clear_color = Some(frontend.state.program().background_color());
+        // resize to actual current window size
+        self.renderer
+            .state
+            .resize(glob.get_size(), &glob.device)
+            .context("Resize 3D renderer")?;
+        // render using updated settings
+        self.renderer
+            .render_external(target, &self.settings, &glob.device, &glob.queue)
+    }
+}

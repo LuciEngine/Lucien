@@ -1,6 +1,7 @@
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+use anyhow::{anyhow, Result};
 use slog::{error, info};
 
 use crate::resources::{DefaultLoader, ResourceLoader};
@@ -12,7 +13,7 @@ pub struct Project {
     // project root directory
     base_dir: Option<PathBuf>,
     // load resource from the directory
-    pub loader: Option<Box<dyn ResourceLoader>>,
+    loader: Option<Arc<dyn ResourceLoader>>,
 }
 impl Project {
     pub fn new(core_logger: Arc<slog::Logger>) -> Self {
@@ -48,7 +49,7 @@ impl Project {
     }
 
     // create project or load from existing
-    pub fn create_or_load(&mut self) -> &mut Self {
+    pub fn create_or_load(&mut self) -> Result<()> {
         let root = self.absolute_path().unwrap();
         if !root.exists() {
             // create project directory
@@ -58,17 +59,24 @@ impl Project {
                 }
                 Err(_) => {
                     error!(self.logger, "project creation error: {:?}", root);
-                    return self;
+                    return Err(anyhow!("failed to create project"));
                 }
             }
         } else {
             info!(self.logger, "project loaded from: {:?}", root);
         }
         // initialize loader with the root directory
-        let loader = Box::new(DefaultLoader::new(root));
+        let loader = Arc::new(DefaultLoader::new(root));
         self.loader = Some(loader);
 
-        self
+        Ok(())
+    }
+
+    pub fn loader(&self) -> Option<Arc<dyn ResourceLoader>> {
+        match self.loader {
+            Some(_) => Some(Arc::clone(&self.loader.as_ref().unwrap())),
+            _ => None,
+        }
     }
 
     // change base directory

@@ -1,4 +1,8 @@
 use crate::Vertex;
+use anyhow::{Context, Result};
+use std::sync::Arc;
+
+use lucien_core::resources::ResourceLoader;
 
 #[derive(Debug, Clone, Copy)]
 pub enum RenderMode {
@@ -22,38 +26,49 @@ impl Into<wgpu::PrimitiveTopology> for RenderMode {
 }
 
 impl Pipeline {
-    pub fn textured(layout: &wgpu::PipelineLayout, device: &wgpu::Device) -> wgpu::RenderPipeline {
-        let (vs_module, fs_module) = Pipeline::load_shaders(&device);
-        Pipeline::create(
+    pub fn textured(
+        layout: &wgpu::PipelineLayout, device: &wgpu::Device, shader_name: &str,
+        loader: Arc<dyn ResourceLoader>,
+    ) -> Result<wgpu::RenderPipeline> {
+        let (vs_module, fs_module) = Pipeline::load_shaders(&device, shader_name, loader)?;
+        Ok(Pipeline::create(
             Some("raster_render_pipeline"),
             layout,
             &vs_module,
             &fs_module,
             RenderMode::Default,
             device,
-        )
+        ))
     }
 
-    pub fn wireframe(layout: &wgpu::PipelineLayout, device: &wgpu::Device) -> wgpu::RenderPipeline {
-        let (vs_module, fs_module) = Pipeline::load_shaders(&device);
-        Pipeline::create(
+    pub fn wireframe(
+        layout: &wgpu::PipelineLayout, device: &wgpu::Device, shader_name: &str,
+        loader: Arc<dyn ResourceLoader>,
+    ) -> Result<wgpu::RenderPipeline> {
+        let (vs_module, fs_module) = Pipeline::load_shaders(&device, shader_name, loader)?;
+        Ok(Pipeline::create(
             Some("wireframe_render_pipeline"),
             layout,
             &vs_module,
             &fs_module,
             RenderMode::WireFrame,
             device,
-        )
+        ))
     }
 
-    // todo load by name
-    fn load_shaders(device: &wgpu::Device) -> (wgpu::ShaderModule, wgpu::ShaderModule) {
-        let vs_src = include_str!("shaders/shader.vert.glsl");
-        let fs_src = include_str!("shaders/shader.frag.glsl");
-        let mut compiler = shaderc::Compiler::new().unwrap();
+    fn load_shaders(
+        device: &wgpu::Device, shader_name: &str, loader: Arc<dyn ResourceLoader>,
+    ) -> Result<(wgpu::ShaderModule, wgpu::ShaderModule)> {
+        let vs_src = loader
+            .load_text(format!("{}.vert.glsl", shader_name).as_str())
+            .context("Failed to load vert shader")?;
+        let fs_src = loader
+            .load_text(format!("{}.frag.glsl", shader_name).as_str())
+            .context("Failed to load frag shader")?;
+        let mut compiler = shaderc::Compiler::new().context("Failed to compile shader")?;
         let vs_spirv = compiler
             .compile_into_spirv(
-                vs_src,
+                vs_src.as_str(),
                 shaderc::ShaderKind::Vertex,
                 "shader.vert",
                 "main",
@@ -62,7 +77,7 @@ impl Pipeline {
             .unwrap();
         let fs_spirv = compiler
             .compile_into_spirv(
-                fs_src,
+                fs_src.as_str(),
                 shaderc::ShaderKind::Fragment,
                 "shader.frag",
                 "main",
@@ -73,7 +88,7 @@ impl Pipeline {
         let fs_data = wgpu::util::make_spirv(fs_spirv.as_binary_u8());
         let vs_module = device.create_shader_module(vs_data);
         let fs_module = device.create_shader_module(fs_data);
-        (vs_module, fs_module)
+        Ok((vs_module, fs_module))
     }
 
     // todo accept config

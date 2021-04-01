@@ -1,19 +1,21 @@
+use anyhow::{Context, Result};
+use image::RgbaImage;
 use std::fs::File;
 use std::io::Read;
 use std::path::PathBuf;
-
-use anyhow::{Context, Result};
-use tobj::{Material, Mesh};
+use tobj::{Material, Model};
 
 // Load resources
 pub trait ResourceLoader {
     fn load_text(&self, name: &str) -> Result<String>;
     fn load_bytes(&self, name: &str) -> Result<Vec<u8>>;
     // .obj can contain multiple models
-    fn load_obj(&self, name: &str) -> Result<(Vec<Mesh>, Vec<Material>)>;
+    fn load_obj(&self, name: &str) -> Result<(Vec<Model>, Vec<Material>)>;
+    fn load_rgba(&self, name: &str) -> Result<RgbaImage>;
 }
 
 // Load from a base directory
+#[derive(Debug)]
 pub struct DefaultLoader {
     base_dir: PathBuf,
 }
@@ -46,11 +48,18 @@ impl ResourceLoader for DefaultLoader {
         Ok(contents)
     }
 
-    fn load_obj(&self, name: &str) -> Result<(Vec<Mesh>, Vec<Material>)> {
+    fn load_obj(&self, name: &str) -> Result<(Vec<Model>, Vec<Material>)> {
         let file_path = self.base_dir.join(name);
-        let (objs, materials) = tobj::load_obj(&file_path, false)
+        let (objs, materials) = tobj::load_obj(&file_path, true)
             .with_context(|| format!("Failed to load obj: {:?}", &file_path))?;
-        let meshes = objs.into_iter().map(|obj| obj.mesh).collect();
-        Ok((meshes, materials))
+        // let meshes = objs.into_iter().map(|obj| obj.mesh).collect();
+        Ok((objs, materials))
+    }
+
+    fn load_rgba(&self, name: &str) -> Result<RgbaImage> {
+        let file_path = self.base_dir.join(name);
+        let img = image::open(&file_path)
+            .with_context(|| format!("Failed to open file {:?}", &file_path))?;
+        Ok(img.to_rgba8())
     }
 }

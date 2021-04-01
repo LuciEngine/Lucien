@@ -1,5 +1,9 @@
 use crate::{DepthTexture, Pipeline, RenderMode, RenderTarget, RenderTexture, Scene, Uniforms};
 use anyhow::{Context, Result};
+use std::sync::Arc;
+use time::Instant;
+
+use lucien_core::resources::ResourceLoader;
 
 pub type RgbaBuffer = image::ImageBuffer<image::Rgba<u8>, Vec<u8>>;
 
@@ -18,6 +22,7 @@ pub struct RenderState {
     pub rt: RenderTexture,
     pub rb: Option<wgpu::Buffer>,
     pub size: [u32; 2],
+    pub start_at: Instant,
     depth: DepthTexture,
     uniforms: Uniforms,
     scene: Scene,
@@ -44,10 +49,16 @@ impl Renderer {
     // use first model & material to create pipeline memory layout
     pub fn new(
         device: &wgpu::Device, queue: &wgpu::Queue, settings: &RenderSettings,
+        loader: Arc<dyn ResourceLoader>,
     ) -> Result<Self> {
         let size = settings.size;
+        // todo remove hard code
+        let scene = Scene::new(device)
+            .context("Failed to create scene")?
+            .load("bunny.obj", device, queue, loader.as_ref())
+            .context("Failed to load scene")?;
         let state =
-            RenderState::new(size, &device, &queue).context("Failed to create render state")?;
+            RenderState::new(size, &device, scene).context("Failed to create render state")?;
         let mesh = &state.scene.models[0].mesh;
         let material = &state.scene.materials[mesh.material];
 
@@ -62,13 +73,24 @@ impl Renderer {
                 bind_group_layouts: &bind_group_layouts[..],
                 push_constant_ranges: &[],
             });
-        let textured_pipeline = Pipeline::textured(&render_pipeline_layout, &device);
-        let wireframe_pipeline = Pipeline::wireframe(&render_pipeline_layout, &device);
+        let default_shader = "shaders/normal";
+        let textured_pipeline = Pipeline::textured(
+            &render_pipeline_layout,
+            &device,
+            default_shader,
+            loader.clone(),
+        )
+        .context("Failed to create pipeline")?;
+        let wireframe_pipeline = Pipeline::wireframe(
+            &render_pipeline_layout,
+            &device,
+            default_shader,
+            loader.clone(),
+        )
+        .context("Failed to create pipeline")?;
 
         Ok(Self {
             size,
-            // device,
-            // queue,
             textured_pipeline,
             wireframe_pipeline,
             state,
@@ -80,7 +102,10 @@ impl Renderer {
 
         // update the game state here
         // todo replace with actual game logic
-        self.state.scene.camera.eye.z -= 0.01;
+        let time = self.state.start_at.elapsed().as_seconds_f32();
+
+        self.state.scene.camera.eye.x = time.sin() * 5.0;
+        self.state.scene.camera.eye.z = time.cos() * 5.0;
         self.state.scene.camera.update_view_matrix();
         self.state.scene.light.position = self.state.scene.camera.eye;
 
@@ -104,7 +129,14 @@ impl Renderer {
             let mesh = &self.state.scene.models[0].mesh;
             let material = &self.state.scene.materials[mesh.material];
 
-            render_pass.set_pipeline(&self.textured_pipeline);
+            match settings.render_mode {
+                RenderMode::Default => {
+                    render_pass.set_pipeline(&self.textured_pipeline);
+                }
+                RenderMode::WireFrame => {
+                    render_pass.set_pipeline(&self.wireframe_pipeline);
+                }
+            }
             render_pass.set_bind_group(0, &self.state.uniforms.bind_group, &[]);
             render_pass.set_bind_group(1, &material.diffuse_texture.group, &[]);
             render_pass.set_bind_group(2, &material.bind_group, &[]);
@@ -270,15 +302,15 @@ impl Default for RenderSettings {
 }
 
 impl RenderState {
-    pub fn new(size: [u32; 2], device: &wgpu::Device, queue: &wgpu::Queue) -> Result<Self> {
+    pub fn new(size: [u32; 2], device: &wgpu::Device, scene: Scene) -> Result<Self> {
         use super::buffer::*;
 
-        let scene = Scene::new(device).load("src/examples/data/cube.obj", device, queue)?;
         let uniforms = Uniforms::new(&scene, device);
         let depth = DepthTexture::new(device, size[0], size[1], Some("depth_texture"));
         let rt = RenderTexture::new(size[0], size[1], device)
             .context("Failed to create render texture")?;
         let rb = Some(render_buffer(&rt, device));
+        let start_at = Instant::now();
 
         Ok(Self {
             rt,
@@ -287,6 +319,7 @@ impl RenderState {
             uniforms,
             depth,
             scene,
+            start_at,
         })
     }
 
