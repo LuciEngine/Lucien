@@ -1,11 +1,10 @@
+use crate::widgets::UserInterface;
+use crate::{Backend, GlobalState};
 use anyhow::Result;
 use futures::task::SpawnExt;
 use iced_native::program;
-use iced_wgpu::Renderer;
+use iced_wgpu::{wgpu, Renderer};
 use iced_winit::{conversion, futures, winit, Debug};
-
-use crate::widgets::UserInterface;
-use crate::{Backend, GlobalState};
 use winit::{dpi::PhysicalPosition, event::ModifiersState};
 
 pub(crate) struct Frontend {

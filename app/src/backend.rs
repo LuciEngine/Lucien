@@ -1,6 +1,6 @@
-use anyhow::{Context, Result};
-
 use crate::{Frontend, GlobalState};
+use anyhow::{Context, Result};
+use iced_wgpu::wgpu;
 use lucien_render as render;
 
 pub(crate) struct Backend {

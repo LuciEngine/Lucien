@@ -1,5 +1,6 @@
 use crate::{DepthTexture, Pipeline, RenderMode, RenderTarget, RenderTexture, Scene, Uniforms};
 use anyhow::{Context, Result};
+use time::Instant;
 
 pub type RgbaBuffer = image::ImageBuffer<image::Rgba<u8>, Vec<u8>>;
 
@@ -18,6 +19,7 @@ pub struct RenderState {
     pub rt: RenderTexture,
     pub rb: Option<wgpu::Buffer>,
     pub size: [u32; 2],
+    pub start_at: Instant,
     depth: DepthTexture,
     uniforms: Uniforms,
     scene: Scene,
@@ -80,7 +82,10 @@ impl Renderer {
 
         // update the game state here
         // todo replace with actual game logic
-        self.state.scene.camera.eye.z -= 0.01;
+        let time = self.state.start_at.elapsed().as_seconds_f32();
+
+        self.state.scene.camera.eye.x = time.sin() * 5.0;
+        self.state.scene.camera.eye.z = time.cos() * 5.0;
         self.state.scene.camera.update_view_matrix();
         self.state.scene.light.position = self.state.scene.camera.eye;
 
@@ -279,6 +284,7 @@ impl RenderState {
         let rt = RenderTexture::new(size[0], size[1], device)
             .context("Failed to create render texture")?;
         let rb = Some(render_buffer(&rt, device));
+        let start_at = Instant::now();
 
         Ok(Self {
             rt,
@@ -287,6 +293,7 @@ impl RenderState {
             uniforms,
             depth,
             scene,
+            start_at,
         })
     }
 

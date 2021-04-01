@@ -73,6 +73,17 @@ impl MaterialRaw {
     }
 }
 
+impl Default for MaterialRaw {
+    fn default() -> Self {
+        Self {
+            ambient: vector3_zero(),
+            diffuse: vector3_zero(),
+            specular: vector3_zero(),
+            shininess: 0.0,
+        }
+    }
+}
+
 unsafe impl bytemuck::Pod for UniformsRaw {}
 unsafe impl bytemuck::Zeroable for UniformsRaw {}
 
@@ -94,4 +105,8 @@ impl UniformsRaw {
 
 pub fn vec3_to_raw(v: &Vec3) -> Vector3<f32> {
     Vector3::from_slice(v.as_ref())
+}
+
+fn vector3_zero() -> Vector3<f32> {
+    Vector3::from_slice(&[0.0, 0.0, 0.0])
 }

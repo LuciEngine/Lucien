@@ -9,14 +9,15 @@ edition = "2018"
 [dependencies]
 lucien_render = { path = "../render" }
 lucien_core = { path = "../core" }
-
+# render
 iced = { version = "0.2.0", features = ["image", "tokio"] }
 iced_futures = "0.2"
 iced_native = "0.3"
 iced_winit = "0.2"
 iced_wgpu = "0.3"
-
+# accurate sleep
+spin_sleep = "1.0"
+# logger
 slog = "2.7"
-
-anyhow = "*" # handle error
-wgpu = "0.6.2"
+# error handle
+anyhow = "*"

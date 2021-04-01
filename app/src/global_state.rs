@@ -1,13 +1,11 @@
 use crate::message::Message;
 use crate::*;
 
-use iced_winit::{futures, winit, Size};
-use winit::event_loop::EventLoop;
-
+use anyhow::Result;
 use futures::executor::block_on;
 use iced_wgpu::{wgpu, Viewport};
-
-use anyhow::Result;
+use iced_winit::{futures, winit, Size};
+use winit::event_loop::EventLoop;
 
 pub(crate) struct GlobalState {
     pub window: winit::window::Window,

@@ -16,5 +16,7 @@ glam = { version = "0.13", features = ["serde"] } # math
 bytemuck = "1.5" # type cast
 crevice = "0.5"
 mint = "0.5"
+# time
+time = "0.2"
 # error handle
 anyhow = "*"

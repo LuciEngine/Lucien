@@ -3,19 +3,23 @@ use crate::widgets::UserInterface;
 use crate::{Backend, Frontend, GlobalState};
 
 use anyhow::{anyhow, Context, Result};
+use slog::info;
+use spin_sleep;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use iced_winit::{conversion, winit};
-use winit::{
-    event::{Event, WindowEvent},
-    event_loop::{ControlFlow, EventLoop},
+use iced_winit::{
+    conversion,
+    winit::{
+        event::{Event, WindowEvent},
+        event_loop::{ControlFlow, EventLoop},
+    },
 };
-
-use slog::info;
 
 use lucien_core as core;
 use lucien_core::resources::Project;
+
+static VERSION: &str = env!("CARGO_PKG_VERSION");
 
 // run an application
 // todo make this a trait so you can customize the application
@@ -79,7 +83,7 @@ impl Application {
         std::thread::spawn(move || {
             loop {
                 // todo use actual frame rate
-                std::thread::sleep(std::time::Duration::from_millis(10));
+                spin_sleep::sleep(std::time::Duration::from_millis(10));
                 proxy.send_event(Message::Tick).ok();
             }
         });
@@ -116,7 +120,13 @@ impl Application {
                                 // here is where scene update should happen
                                 // yes, you only ask the window to redraw on each tick
                                 Message::Tick => {
+                                    // todo spawn a thread, abort it on timeout
+                                    // and request render on finish; also pass in logger
+                                    // reuse a tokio runtime to spawn async tasks;
+                                    // update should be in a separate thread than render thread
                                     backend.update(&glob).expect("3D update");
+                                    glob.window
+                                        .set_title(format!("lucien v{}", VERSION).as_str());
                                     glob.window.request_redraw();
                                 }
                                 // todo other user events
