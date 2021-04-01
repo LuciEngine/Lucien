@@ -1,6 +1,8 @@
 use crate::{AmbientLight, Camera, Material, Model, PointLight};
 use anyhow::Result;
 
+use lucien_core::resources::ResourceLoader;
+
 #[derive(Debug)]
 pub struct Scene {
     pub camera: Camera,
@@ -11,24 +13,27 @@ pub struct Scene {
 }
 
 impl Scene {
-    pub fn new(device: &wgpu::Device) -> Self {
+    pub fn new(device: &wgpu::Device) -> Result<Self> {
         let models = vec![];
         let materials = vec![];
         let camera = Camera::default();
         let light = PointLight::default(device);
         let ambient_light = AmbientLight::default();
 
-        Self {
+        Ok(Self {
             camera,
             light,
             ambient_light,
             models,
             materials,
-        }
+        })
     }
 
-    pub fn load(mut self, path: &str, device: &wgpu::Device, queue: &wgpu::Queue) -> Result<Self> {
-        let (obj_models, obj_materials) = tobj::load_obj(path, true)?;
+    pub fn load(
+        mut self, path: &str, device: &wgpu::Device, queue: &wgpu::Queue,
+        loader: &dyn ResourceLoader,
+    ) -> Result<Self> {
+        let (obj_models, obj_materials) = loader.load_obj(path)?;
         obj_models.iter().for_each(|model| {
             self.models.push(Model::new(device, model));
         });

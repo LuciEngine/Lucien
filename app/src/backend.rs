@@ -1,19 +1,30 @@
 use crate::{Frontend, GlobalState};
 use anyhow::{Context, Result};
 use iced_wgpu::wgpu;
+
+use lucien_core::resources::ResourceLoader;
 use lucien_render as render;
+
+use std::sync::Arc;
 
 pub(crate) struct Backend {
     pub settings: render::RenderSettings,
     pub renderer: render::Renderer,
+    pub loader: Arc<dyn ResourceLoader>,
 }
 
 impl Backend {
-    pub fn new(glob: &GlobalState) -> Self {
+    pub fn new(glob: &GlobalState, loader: Arc<dyn ResourceLoader>) -> Self {
         let settings = render::RenderSettings::new(glob.get_size());
-        let renderer = render::Renderer::new(&glob.device, &glob.queue, &settings).unwrap();
+        let renderer =
+            render::Renderer::new(&glob.device, &glob.queue, &settings, Arc::clone(&loader))
+                .unwrap();
 
-        Self { settings, renderer }
+        Self {
+            settings,
+            renderer,
+            loader,
+        }
     }
 
     pub fn update(&mut self, glob: &GlobalState) -> Result<()> {

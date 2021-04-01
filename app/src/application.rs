@@ -17,7 +17,7 @@ use iced_winit::{
 };
 
 use lucien_core as core;
-use lucien_core::resources::Project;
+use lucien_core::resources::{Project, ResourceLoader};
 
 static VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -56,7 +56,7 @@ impl Application {
         }
     }
 
-    pub fn loader(&self) -> Result<&dyn core::resources::ResourceLoader> {
+    pub fn loader(&self) -> Result<Arc<dyn ResourceLoader>> {
         match self.project()?.loader() {
             Some(loader) => Ok(loader),
             _ => Err(anyhow!("failed to get loader")),
@@ -73,9 +73,12 @@ impl Application {
 
         // create winit window
         let mut glob = GlobalState::new(&event_loop);
-        let mut backend = Backend::new(&glob);
+        let mut backend = Backend::new(&glob, self.loader()?);
         let mut frontend = Frontend::new(&glob, UserInterface::new());
         info!(&self.logger, "Window creation successful.");
+
+        glob.window
+            .set_title(format!("lucien v{}", VERSION).as_str());
 
         // wake up main loop on tick and dispatch a custom event
         // from a different thread.
@@ -125,8 +128,6 @@ impl Application {
                                     // reuse a tokio runtime to spawn async tasks;
                                     // update should be in a separate thread than render thread
                                     backend.update(&glob).expect("3D update");
-                                    glob.window
-                                        .set_title(format!("lucien v{}", VERSION).as_str());
                                     glob.window.request_redraw();
                                 }
                                 // todo other user events

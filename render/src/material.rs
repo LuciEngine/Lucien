@@ -22,7 +22,8 @@ impl Material {
         let abs = Path::new(".")
             .join("render/src/textures/blank.png")
             .canonicalize()?;
-        let diffuse_texture = Texture::new(abs.to_str().unwrap(), device, queue);
+        let rgba = &image::open(abs)?.to_rgba8();
+        let diffuse_texture = Texture::new(rgba, device, queue);
         let name = material.name.clone();
         let raw = MaterialRaw::from_tobj(material);
         let buffer = uniform_buffer(raw.as_std140().as_bytes(), device, Some("Material Buffer"));
@@ -41,7 +42,8 @@ impl Material {
         let abs = Path::new(".")
             .join("render/src/textures/blank.png")
             .canonicalize()?;
-        let diffuse_texture = Texture::new(abs.to_str().unwrap(), device, queue);
+        let rgba = &image::open(abs)?.to_rgba8();
+        let diffuse_texture = Texture::new(rgba, device, queue);
         let name = String::from("Default Material");
         let raw = MaterialRaw::default();
         let buffer = uniform_buffer(raw.as_std140().as_bytes(), device, Some("Material Buffer"));

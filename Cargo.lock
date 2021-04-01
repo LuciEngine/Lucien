@@ -1661,6 +1661,7 @@ dependencies = [
  "crevice",
  "glam 0.13.0",
  "image",
+ "lucien_core",
  "mint",
  "shaderc",
  "time 0.2.25",

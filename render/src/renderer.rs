@@ -1,6 +1,9 @@
 use crate::{DepthTexture, Pipeline, RenderMode, RenderTarget, RenderTexture, Scene, Uniforms};
 use anyhow::{Context, Result};
+use std::sync::Arc;
 use time::Instant;
+
+use lucien_core::resources::ResourceLoader;
 
 pub type RgbaBuffer = image::ImageBuffer<image::Rgba<u8>, Vec<u8>>;
 
@@ -46,10 +49,16 @@ impl Renderer {
     // use first model & material to create pipeline memory layout
     pub fn new(
         device: &wgpu::Device, queue: &wgpu::Queue, settings: &RenderSettings,
+        loader: Arc<dyn ResourceLoader>,
     ) -> Result<Self> {
         let size = settings.size;
+        // todo remove hard code
+        let scene = Scene::new(device)
+            .context("Failed to create scene")?
+            .load("cube.obj", device, queue, loader.as_ref())
+            .context("Failed to load scene")?;
         let state =
-            RenderState::new(size, &device, &queue).context("Failed to create render state")?;
+            RenderState::new(size, &device, scene).context("Failed to create render state")?;
         let mesh = &state.scene.models[0].mesh;
         let material = &state.scene.materials[mesh.material];
 
@@ -275,10 +284,9 @@ impl Default for RenderSettings {
 }
 
 impl RenderState {
-    pub fn new(size: [u32; 2], device: &wgpu::Device, queue: &wgpu::Queue) -> Result<Self> {
+    pub fn new(size: [u32; 2], device: &wgpu::Device, scene: Scene) -> Result<Self> {
         use super::buffer::*;
 
-        let scene = Scene::new(device).load("src/examples/data/cube.obj", device, queue)?;
         let uniforms = Uniforms::new(&scene, device);
         let depth = DepthTexture::new(device, size[0], size[1], Some("depth_texture"));
         let rt = RenderTexture::new(size[0], size[1], device)

@@ -5,6 +5,8 @@ authors = ["knh190 <knh190@hotmail.com>"]
 edition = "2018"
 
 [dependencies]
+lucien_core = { path = "../core" }
+
 # resource
 image = "0.23" # convert images
 tobj = "2.0.4" # convert models

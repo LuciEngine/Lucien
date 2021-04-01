@@ -13,7 +13,7 @@ pub struct Project {
     // project root directory
     base_dir: Option<PathBuf>,
     // load resource from the directory
-    loader: Option<Box<dyn ResourceLoader>>,
+    loader: Option<Arc<dyn ResourceLoader>>,
 }
 impl Project {
     pub fn new(core_logger: Arc<slog::Logger>) -> Self {
@@ -66,15 +66,15 @@ impl Project {
             info!(self.logger, "project loaded from: {:?}", root);
         }
         // initialize loader with the root directory
-        let loader = Box::new(DefaultLoader::new(root));
+        let loader = Arc::new(DefaultLoader::new(root));
         self.loader = Some(loader);
 
         Ok(())
     }
 
-    pub fn loader(&self) -> Option<&dyn ResourceLoader> {
+    pub fn loader(&self) -> Option<Arc<dyn ResourceLoader>> {
         match self.loader {
-            Some(_) => Some(self.loader.as_ref().unwrap().as_ref()),
+            Some(_) => Some(Arc::clone(&self.loader.as_ref().unwrap())),
             _ => None,
         }
     }
