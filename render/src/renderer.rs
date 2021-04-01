@@ -121,8 +121,10 @@ impl Renderer {
             let mesh = &self.state.scene.models[0].mesh;
             let material = &self.state.scene.materials[mesh.material];
 
-            render_pass.set_pipeline(&self.textured_pipeline);
-            // render_pass.set_pipeline(&self.wireframe_pipeline);
+            match settings.render_mode {
+                RenderMode::Default => { render_pass.set_pipeline(&self.textured_pipeline); }
+                RenderMode::WireFrame => { render_pass.set_pipeline(&self.wireframe_pipeline); }
+            }
             render_pass.set_bind_group(0, &self.state.uniforms.bind_group, &[]);
             render_pass.set_bind_group(1, &material.diffuse_texture.group, &[]);
             render_pass.set_bind_group(2, &material.bind_group, &[]);
