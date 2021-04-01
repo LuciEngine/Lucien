@@ -1633,6 +1633,7 @@ dependencies = [
  "iced_winit",
  "lucien_core",
  "lucien_render",
+ "lucien_vm",
  "slog",
  "spin_sleep",
 ]
@@ -1674,7 +1675,10 @@ dependencies = [
 name = "lucien_vm"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
+ "lucien_core",
  "ruwren",
+ "slog",
 ]
 
 [[package]]

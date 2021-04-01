@@ -27,7 +27,8 @@ impl Into<wgpu::PrimitiveTopology> for RenderMode {
 
 impl Pipeline {
     pub fn textured(
-        layout: &wgpu::PipelineLayout, device: &wgpu::Device, shader_name: &str, loader: Arc<dyn ResourceLoader>,
+        layout: &wgpu::PipelineLayout, device: &wgpu::Device, shader_name: &str,
+        loader: Arc<dyn ResourceLoader>,
     ) -> Result<wgpu::RenderPipeline> {
         let (vs_module, fs_module) = Pipeline::load_shaders(&device, shader_name, loader)?;
         Ok(Pipeline::create(
@@ -41,7 +42,8 @@ impl Pipeline {
     }
 
     pub fn wireframe(
-        layout: &wgpu::PipelineLayout, device: &wgpu::Device, shader_name: &str, loader: Arc<dyn ResourceLoader>,
+        layout: &wgpu::PipelineLayout, device: &wgpu::Device, shader_name: &str,
+        loader: Arc<dyn ResourceLoader>,
     ) -> Result<wgpu::RenderPipeline> {
         let (vs_module, fs_module) = Pipeline::load_shaders(&device, shader_name, loader)?;
         Ok(Pipeline::create(

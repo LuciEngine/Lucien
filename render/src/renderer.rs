@@ -74,12 +74,20 @@ impl Renderer {
                 push_constant_ranges: &[],
             });
         let default_shader = "shaders/normal";
-        let textured_pipeline =
-            Pipeline::textured(&render_pipeline_layout, &device, default_shader, loader.clone())
-                .context("Failed to create pipeline")?;
-        let wireframe_pipeline =
-            Pipeline::wireframe(&render_pipeline_layout, &device, default_shader, loader.clone())
-                .context("Failed to create pipeline")?;
+        let textured_pipeline = Pipeline::textured(
+            &render_pipeline_layout,
+            &device,
+            default_shader,
+            loader.clone(),
+        )
+        .context("Failed to create pipeline")?;
+        let wireframe_pipeline = Pipeline::wireframe(
+            &render_pipeline_layout,
+            &device,
+            default_shader,
+            loader.clone(),
+        )
+        .context("Failed to create pipeline")?;
 
         Ok(Self {
             size,
@@ -122,8 +130,12 @@ impl Renderer {
             let material = &self.state.scene.materials[mesh.material];
 
             match settings.render_mode {
-                RenderMode::Default => { render_pass.set_pipeline(&self.textured_pipeline); }
-                RenderMode::WireFrame => { render_pass.set_pipeline(&self.wireframe_pipeline); }
+                RenderMode::Default => {
+                    render_pass.set_pipeline(&self.textured_pipeline);
+                }
+                RenderMode::WireFrame => {
+                    render_pass.set_pipeline(&self.wireframe_pipeline);
+                }
             }
             render_pass.set_bind_group(0, &self.state.uniforms.bind_group, &[]);
             render_pass.set_bind_group(1, &material.diffuse_texture.group, &[]);

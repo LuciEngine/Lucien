@@ -18,6 +18,7 @@ use iced_winit::{
 
 use lucien_core as core;
 use lucien_core::resources::{Project, ResourceLoader};
+use lucien_vm::Scripting;
 
 static VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -29,6 +30,8 @@ pub struct Application {
     logger: Arc<core::Logger>,
     // project can be shared too?
     project: Option<Project>,
+    // wren scripting
+    vm: Scripting,
 }
 
 impl Application {
@@ -38,10 +41,12 @@ impl Application {
         let mut proj = Project::new(Arc::clone(&logger)).base_dir(root);
         proj.create_or_load()
             .context("Failed to create or load project")?;
+        let vm = Scripting::new(&proj).context("Failed to start vm")?;
 
         Ok(Self {
             logger,
             project: Some(proj),
+            vm,
         })
     }
 
@@ -103,6 +108,9 @@ impl Application {
         // main loop to [produce, handle, and consume]
         // native window events + engine events
         info!(&self.logger, "Running main loop.");
+
+        self.vm.start();
+        self.vm.update();
 
         event_loop.run(move |event, _, control_flow| {
             // when events are all handled, wait until next event arrives

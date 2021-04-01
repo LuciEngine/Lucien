@@ -5,4 +5,8 @@ authors = ["knh190 <knh190@hotmail.com>"]
 edition = "2018"
 
 [dependencies]
+lucien_core = { path = "../core" }
+
+slog = "2.7"
 ruwren = "0.3.5"
+anyhow = "*"

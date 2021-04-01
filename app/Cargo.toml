@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 lucien_render = { path = "../render" }
 lucien_core = { path = "../core" }
+lucien_vm = { path = "../vm" }
 # render
 iced = { version = "0.2.0", features = ["image", "tokio"] }
 iced_futures = "0.2"
