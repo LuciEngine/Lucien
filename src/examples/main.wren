@@ -1,5 +1,6 @@
 class Main {
-    static main() {
+    static start() {
         System.print("Hello from wren!")
     }
+    static update() { }
 }

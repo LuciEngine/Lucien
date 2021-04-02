@@ -92,6 +92,7 @@ impl Application {
         // native window events + engine events
         info!(logger(), "running main loop.");
 
+        self.vm.init();
         self.vm.start();
         self.vm.update();
 

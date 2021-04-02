@@ -8,12 +8,18 @@ use ruwren::{BasicFileLoader, FunctionSignature, ModuleScriptLoader, VMConfig, V
 use slog::{error, info};
 
 static DEFAULT_SCRIPT: &str = r##"
-System.print("No main wren function defined!")
+class Main {
+    static start() {
+        System.print("No main function defined!")
+    }
+    static update() { }
+}
 "##;
 
 pub struct Scripting {
     vm: VMWrapper,
     src: String,
+    initialized: bool,
 }
 
 impl Scripting {
@@ -30,40 +36,57 @@ impl Scripting {
             .script_loader(loader)
             .build();
 
-        Ok(Self { vm, src })
+        Ok(Self { vm, src, initialized: false })
     }
 
     // reload script
-    pub fn reload(&self) {
-        info!(logger(), "reload script");
-    }
-
-    // get handle functions from script
-    pub fn start(&self) {
+    pub fn init(&mut self) {
         match self.vm.interpret("main", &self.src) {
             Ok(_) => {}
             Err(e) => {
                 error!(logger(), "{}", e);
             }
         };
-        info!(logger(), "vm started");
-    }
+        info!(logger(), "script loaded");
 
-    // call update
-    pub fn update(&self) {
+        // interpret `class Main` in main.wren
+        // todo make sure the function exists before it crash
         self.vm.execute(|vm| {
             vm.ensure_slots(1);
             vm.get_variable("main", "Main", 0);
         });
+        self.initialized = true;
+        info!(logger(), "script initialized");
+    }
+
+    // todo return a result and handle it, make hotload possible
+    // call start
+    pub fn start(&self) {
+        if !self.initialized { return; }
         let main_class = self.vm.get_slot_handle(0);
-        let main_function = self
+        let handle = self
             .vm
-            .make_call_handle(FunctionSignature::new_function("main", 0));
+            .make_call_handle(FunctionSignature::new_function("start", 0));
 
         self.vm.set_slot_handle(0, &main_class);
-        let res = self.vm.call_handle(&main_function);
+        let res = self.vm.call_handle(&handle);
         if let Err(e) = res {
-            error!(logger(), "{}", e);
+            error!(logger(), "* [wren] {}", e);
+        }
+    }
+
+    // call update
+    pub fn update(&self) {
+        if !self.initialized { return; }
+        let main_class = self.vm.get_slot_handle(0);
+        let handle = self
+            .vm
+            .make_call_handle(FunctionSignature::new_function("update", 0));
+
+        self.vm.set_slot_handle(0, &main_class);
+        let res = self.vm.call_handle(&handle);
+        if let Err(e) = res {
+            error!(logger(), "* [wren] {}", e);
         }
     }
 }
