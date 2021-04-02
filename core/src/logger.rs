@@ -94,7 +94,6 @@ pub trait LoggerConfigTrait {
 }
 
 impl LoggerConfigTrait for CoreLogBuilder {
-    #[allow(dead_code)]
     fn level(&mut self, level: Level) -> &mut Self {
         let lv = match level {
             Level::Error => Severity::Error,
@@ -107,7 +106,6 @@ impl LoggerConfigTrait for CoreLogBuilder {
         self
     }
 
-    #[allow(dead_code)]
     fn destination(&mut self, dest: Destination) -> &mut Self {
         let output = match dest {
             Destination::Stdout => sloggers::terminal::Destination::Stdout,
@@ -117,7 +115,6 @@ impl LoggerConfigTrait for CoreLogBuilder {
         self
     }
 
-    #[allow(dead_code)]
     fn source(&mut self, source: Source) -> &mut Self {
         let src = match source {
             Source::None => sloggers::types::SourceLocation::None,

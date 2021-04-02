@@ -19,9 +19,13 @@ class Main {
 pub struct Scripting {
     vm: VMWrapper,
     src: String,
-    initialized: bool,
+    has_start: bool,
+    has_update: bool,
 }
 
+// interpret and get update and start function;
+// use default empty function if nothing;
+// update camera, scene light position;
 impl Scripting {
     pub fn new(project: &Project) -> Result<Self> {
         let root = project.path("").unwrap();
@@ -36,10 +40,11 @@ impl Scripting {
             .script_loader(loader)
             .build();
 
-        Ok(Self { vm, src, initialized: false })
+        Ok(Self { vm, src, has_start: false, has_update: false })
     }
 
     // reload script
+    // todo hotload
     pub fn init(&mut self) {
         match self.vm.interpret("main", &self.src) {
             Ok(_) => {}
@@ -49,26 +54,42 @@ impl Scripting {
         };
         info!(logger(), "script loaded");
 
-        // interpret `class Main` in main.wren
-        // todo make sure the function exists before it crash
-        self.vm.execute(|vm| {
-            vm.ensure_slots(1);
-            vm.get_variable("main", "Main", 0);
+        // find `start` fn in main.wren
+        self.has_start = self.vm.execute(|vm| {
+            if vm.has_variable("main", "start") {
+                vm.ensure_slots(1);
+                vm.get_variable("main", "start", 0);
+                true
+            }
+            else {
+                error!(logger(), "script doesn't have `start` method");
+                false
+            }
         });
-        self.initialized = true;
-        info!(logger(), "script initialized");
+        // find `update` fn in main.wren
+        self.has_update = self.vm.execute(|vm| {
+            if vm.has_variable("main", "update") {
+                vm.ensure_slots(1);
+                vm.get_variable("main", "update", 0);
+                true
+            }
+            else {
+                error!(logger(), "script doesn't have `update` method");
+                false
+            }
+        });
     }
 
-    // todo return a result and handle it, make hotload possible
     // call start
     pub fn start(&self) {
-        if !self.initialized { return; }
-        let main_class = self.vm.get_slot_handle(0);
+        if !self.has_start { return; }
+        // get start function from main module and call
+        // let main_class = self.vm.get_slot_handle(0);
         let handle = self
             .vm
             .make_call_handle(FunctionSignature::new_function("start", 0));
 
-        self.vm.set_slot_handle(0, &main_class);
+        // self.vm.set_slot_handle(0, &main_class);
         let res = self.vm.call_handle(&handle);
         if let Err(e) = res {
             error!(logger(), "* [wren] {}", e);
@@ -77,19 +98,16 @@ impl Scripting {
 
     // call update
     pub fn update(&self) {
-        if !self.initialized { return; }
-        let main_class = self.vm.get_slot_handle(0);
+        if !self.has_update { return; }
+        // let main_class = self.vm.get_slot_handle(0);
         let handle = self
             .vm
-            .make_call_handle(FunctionSignature::new_function("update", 0));
+            .make_call_handle(FunctionSignature::new_function("update", 1));
 
-        self.vm.set_slot_handle(0, &main_class);
+        // self.vm.set_slot_handle(0, &main_class);
         let res = self.vm.call_handle(&handle);
         if let Err(e) = res {
             error!(logger(), "* [wren] {}", e);
         }
     }
 }
-// interprete and get update and main function
-// use default empty function if nothing
-// update camera, scene light position
