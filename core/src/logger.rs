@@ -1,12 +1,11 @@
 // Middleware that provides Luci Engine logger
 
+use crate::Logger;
+use slog::debug;
 use sloggers::terminal::TerminalLoggerBuilder;
 use sloggers::types::Severity;
 use sloggers::Build;
 use std::sync::atomic::{AtomicBool, Ordering};
-use crate::Logger;
-
-// static mut LOADER: &dyn Loader = &ResourceLoader;
 
 static mut LOGGER: Option<&Logger> = None;
 static INITIALIZED: AtomicBool = AtomicBool::new(false);
@@ -38,22 +37,20 @@ pub enum Source {
     File,
 }
 
-fn set_logger(logger: &'static Logger) {
-    set_logger_inner(|| logger)
+fn set_singleton(logger: &'static Logger) {
+    set_singleton_inner(|| logger)
 }
 
-fn set_logger_inner<F>(make_logger: F)
+fn set_singleton_inner<F>(make_singleton: F)
 where
     F: FnOnce() -> &'static Logger,
 {
     unsafe {
-        if std::ptr::read(&INITIALIZED).into_inner()
-        {
-            println!("loader already initialized");
-        }
-        else {
-            LOGGER = Some(make_logger());
+        if !std::ptr::read(&INITIALIZED).into_inner() {
+            LOGGER = Some(make_singleton());
             INITIALIZED.store(true, Ordering::Relaxed);
+
+            debug!(logger(), "logger initialized.");
         }
     }
 }
@@ -61,10 +58,9 @@ where
 pub fn logger() -> &'static Logger {
     unsafe {
         if !std::ptr::read(&INITIALIZED).into_inner() {
-            CoreLogBuilder::new().get_logger()
-        } else {
-            &LOGGER.unwrap()
+            return CoreLogBuilder::new().get_logger();
         }
+        LOGGER.unwrap()
     }
 }
 
@@ -84,9 +80,9 @@ impl CoreLogBuilder {
                     .destination(Destination::Stderr)
                     .source(Source::None);
                 let logger = Box::new(self.builder.build().unwrap());
-                set_logger(Box::leak(logger));
+                set_singleton(Box::leak(logger));
             }
-            &LOGGER.unwrap()
+            LOGGER.unwrap()
         }
     }
 }

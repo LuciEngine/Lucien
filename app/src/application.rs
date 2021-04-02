@@ -6,7 +6,6 @@ use anyhow::{anyhow, Context, Result};
 use slog::info;
 use spin_sleep;
 use std::path::PathBuf;
-use std::sync::Arc;
 
 use iced_winit::{
     conversion,
@@ -17,8 +16,8 @@ use iced_winit::{
 };
 
 use lucien_core as core;
-use lucien_core::resources::{Project, ResourceLoader};
 use lucien_core::logger::logger;
+use lucien_core::resources::Project;
 use lucien_vm::Scripting;
 
 static VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -54,13 +53,6 @@ impl Application {
         }
     }
 
-    pub fn loader(&self) -> Result<Arc<dyn ResourceLoader>> {
-        match self.project()?.loader() {
-            Some(loader) => Ok(loader),
-            _ => Err(anyhow!("failed to get loader")),
-        }
-    }
-
     pub fn path(&self, name: &str) -> Option<PathBuf> {
         self.project.as_ref().unwrap().path(name)
     }
@@ -69,13 +61,11 @@ impl Application {
         // create event loop
         let event_loop = EventLoop::<Message>::with_user_event();
 
-        // create resource loader
-        let loader = self.loader().context("Failed to get resource loader")?;
         // create ui layout
         let ui = UserInterface::new();
         // create winit window
         let mut glob = GlobalState::new(&event_loop);
-        let mut backend = Backend::new(&glob, loader).context("Failed to create backend")?;
+        let mut backend = Backend::new(&glob).context("Failed to create backend")?;
         let mut frontend = Frontend::new(&glob, ui).context("Failed to create frontend")?;
         info!(logger(), "Window creation successful.");
 

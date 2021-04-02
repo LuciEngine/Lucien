@@ -1,8 +1,6 @@
 use crate::Vertex;
 use anyhow::{Context, Result};
-use std::sync::Arc;
-
-use lucien_core::resources::ResourceLoader;
+use lucien_core::resources::loader;
 
 #[derive(Debug, Clone, Copy)]
 pub enum RenderMode {
@@ -28,9 +26,8 @@ impl Into<wgpu::PrimitiveTopology> for RenderMode {
 impl Pipeline {
     pub fn textured(
         layout: &wgpu::PipelineLayout, device: &wgpu::Device, shader_name: &str,
-        loader: Arc<dyn ResourceLoader>,
     ) -> Result<wgpu::RenderPipeline> {
-        let (vs_module, fs_module) = Pipeline::load_shaders(&device, shader_name, loader)?;
+        let (vs_module, fs_module) = Pipeline::load_shaders(&device, shader_name)?;
         Ok(Pipeline::create(
             Some("raster_render_pipeline"),
             layout,
@@ -43,9 +40,8 @@ impl Pipeline {
 
     pub fn wireframe(
         layout: &wgpu::PipelineLayout, device: &wgpu::Device, shader_name: &str,
-        loader: Arc<dyn ResourceLoader>,
     ) -> Result<wgpu::RenderPipeline> {
-        let (vs_module, fs_module) = Pipeline::load_shaders(&device, shader_name, loader)?;
+        let (vs_module, fs_module) = Pipeline::load_shaders(&device, shader_name)?;
         Ok(Pipeline::create(
             Some("wireframe_render_pipeline"),
             layout,
@@ -57,12 +53,12 @@ impl Pipeline {
     }
 
     fn load_shaders(
-        device: &wgpu::Device, shader_name: &str, loader: Arc<dyn ResourceLoader>,
+        device: &wgpu::Device, shader_name: &str,
     ) -> Result<(wgpu::ShaderModule, wgpu::ShaderModule)> {
-        let vs_src = loader
+        let vs_src = loader()?
             .load_text(format!("{}.vert.glsl", shader_name).as_str())
             .context("Failed to load vert shader")?;
-        let fs_src = loader
+        let fs_src = loader()?
             .load_text(format!("{}.frag.glsl", shader_name).as_str())
             .context("Failed to load frag shader")?;
         let mut compiler = shaderc::Compiler::new().context("Failed to compile shader")?;

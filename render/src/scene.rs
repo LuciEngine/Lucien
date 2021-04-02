@@ -1,8 +1,8 @@
 use crate::{AmbientLight, Camera, Material, Model, PointLight};
 use anyhow::Result;
 
-use lucien_core::resources::ResourceLoader;
 use lucien_core::logger::logger;
+use lucien_core::resources::loader;
 use slog::warn;
 
 #[derive(Debug)]
@@ -31,11 +31,8 @@ impl Scene {
         })
     }
 
-    pub fn load(
-        mut self, path: &str, device: &wgpu::Device, queue: &wgpu::Queue,
-        loader: &dyn ResourceLoader,
-    ) -> Result<Self> {
-        let (obj_models, obj_materials) = loader.load_obj(path)?;
+    pub fn load(mut self, path: &str, device: &wgpu::Device, queue: &wgpu::Queue) -> Result<Self> {
+        let (obj_models, obj_materials) = loader()?.load_obj(path)?;
         obj_models.iter().for_each(|model| {
             self.models.push(Model::new(device, model));
         });

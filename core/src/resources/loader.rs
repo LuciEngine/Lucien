@@ -1,9 +1,50 @@
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use image::RgbaImage;
 use std::fs::File;
 use std::io::Read;
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicBool, Ordering};
 use tobj::{Material, Model};
+
+use crate::logger::logger;
+use slog::debug;
+
+static mut LOADER: Option<&dyn ResourceLoader> = None;
+static INITIALIZED: AtomicBool = AtomicBool::new(false);
+
+fn set_singleton(loader: &'static dyn ResourceLoader) {
+    set_singleton_inner(|| loader)
+}
+
+fn set_singleton_inner<F>(make_singleton: F)
+where
+    F: FnOnce() -> &'static dyn ResourceLoader,
+{
+    unsafe {
+        if !std::ptr::read(&INITIALIZED).into_inner() {
+            LOADER = Some(make_singleton());
+            INITIALIZED.store(true, Ordering::Relaxed);
+
+            debug!(logger(), "resource loader initialized.");
+        }
+    }
+}
+
+pub fn init_loader(root: PathBuf) -> Result<()> {
+    let loader = Box::new(DefaultLoader::new(root));
+    set_singleton(Box::leak(loader));
+
+    Ok(())
+}
+
+pub fn loader() -> Result<&'static dyn ResourceLoader> {
+    unsafe {
+        if !std::ptr::read(&INITIALIZED).into_inner() {
+            return Err(anyhow!("loader not intialized"));
+        }
+        Ok(LOADER.unwrap())
+    }
+}
 
 // Load resources
 pub trait ResourceLoader {

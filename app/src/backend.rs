@@ -1,30 +1,20 @@
 use crate::{Frontend, GlobalState};
 use anyhow::{Context, Result};
 use iced_wgpu::wgpu;
-
-use lucien_core::resources::ResourceLoader;
 use lucien_render as render;
-
-use std::sync::Arc;
 
 pub(crate) struct Backend {
     pub settings: render::RenderSettings,
     pub renderer: render::Renderer,
-    pub loader: Arc<dyn ResourceLoader>,
 }
 
 impl Backend {
-    pub fn new(glob: &GlobalState, loader: Arc<dyn ResourceLoader>) -> Result<Self> {
-        let ld = Arc::clone(&loader);
+    pub fn new(glob: &GlobalState) -> Result<Self> {
         let settings = render::RenderSettings::new(glob.get_size());
-        let renderer = render::Renderer::new(&glob.device, &glob.queue, &settings, ld)
+        let renderer = render::Renderer::new(&glob.device, &glob.queue, &settings)
             .context("Failed to create 3D renderer")?;
 
-        Ok(Self {
-            settings,
-            renderer,
-            loader,
-        })
+        Ok(Self { settings, renderer })
     }
 
     pub fn update(&mut self, glob: &GlobalState) -> Result<()> {

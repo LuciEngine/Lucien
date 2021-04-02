@@ -1,9 +1,6 @@
 use crate::{DepthTexture, Pipeline, RenderMode, RenderTarget, RenderTexture, Scene, Uniforms};
 use anyhow::{Context, Result};
-use std::sync::Arc;
 use time::Instant;
-
-use lucien_core::resources::ResourceLoader;
 
 pub type RgbaBuffer = image::ImageBuffer<image::Rgba<u8>, Vec<u8>>;
 
@@ -49,13 +46,12 @@ impl Renderer {
     // use first model & material to create pipeline memory layout
     pub fn new(
         device: &wgpu::Device, queue: &wgpu::Queue, settings: &RenderSettings,
-        loader: Arc<dyn ResourceLoader>,
     ) -> Result<Self> {
         let size = settings.size;
         // todo remove hard code
         let scene = Scene::new(device)
             .context("Failed to create scene")?
-            .load("bunny.obj", device, queue, loader.as_ref())
+            .load("bunny.obj", device, queue)
             .context("Failed to load scene")?;
         let state =
             RenderState::new(size, &device, scene).context("Failed to create render state")?;
@@ -74,20 +70,12 @@ impl Renderer {
                 push_constant_ranges: &[],
             });
         let default_shader = "shaders/normal";
-        let textured_pipeline = Pipeline::textured(
-            &render_pipeline_layout,
-            &device,
-            default_shader,
-            loader.clone(),
-        )
-        .context("Failed to create pipeline")?;
-        let wireframe_pipeline = Pipeline::wireframe(
-            &render_pipeline_layout,
-            &device,
-            default_shader,
-            loader.clone(),
-        )
-        .context("Failed to create pipeline")?;
+        let textured_pipeline =
+            Pipeline::textured(&render_pipeline_layout, &device, default_shader)
+                .context("Failed to create pipeline")?;
+        let wireframe_pipeline =
+            Pipeline::wireframe(&render_pipeline_layout, &device, default_shader)
+                .context("Failed to create pipeline")?;
 
         Ok(Self {
             size,

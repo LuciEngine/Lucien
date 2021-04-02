@@ -1,8 +1,8 @@
-use ruwren::{BasicFileLoader, ModuleScriptLoader, VMConfig, VMWrapper, FunctionSignature};
+use ruwren::{BasicFileLoader, FunctionSignature, ModuleScriptLoader, VMConfig, VMWrapper};
 
 use anyhow::Result;
-use lucien_core::resources::Project;
 use lucien_core::logger::logger;
+use lucien_core::resources::Project;
 use slog::{error, info};
 
 static DEFAULT_SCRIPT: &str = r##"
@@ -54,7 +54,9 @@ impl Scripting {
             vm.get_variable("main", "Main", 0);
         });
         let main_class = self.vm.get_slot_handle(0);
-        let main_function = self.vm.make_call_handle(FunctionSignature::new_function("main", 0));
+        let main_function = self
+            .vm
+            .make_call_handle(FunctionSignature::new_function("main", 0));
 
         self.vm.set_slot_handle(0, &main_class);
         let res = self.vm.call_handle(&main_function);
