@@ -3,6 +3,13 @@
 use sloggers::terminal::TerminalLoggerBuilder;
 use sloggers::types::Severity;
 use sloggers::Build;
+use std::sync::atomic::{AtomicBool, Ordering};
+use crate::Logger;
+
+// static mut LOADER: &dyn Loader = &ResourceLoader;
+
+static mut LOGGER: Option<&Logger> = None;
+static INITIALIZED: AtomicBool = AtomicBool::new(false);
 
 #[derive(Debug)]
 pub struct CoreLogBuilder {
@@ -31,6 +38,36 @@ pub enum Source {
     File,
 }
 
+fn set_logger(logger: &'static Logger) {
+    set_logger_inner(|| logger)
+}
+
+fn set_logger_inner<F>(make_logger: F)
+where
+    F: FnOnce() -> &'static Logger,
+{
+    unsafe {
+        if std::ptr::read(&INITIALIZED).into_inner()
+        {
+            println!("loader already initialized");
+        }
+        else {
+            LOGGER = Some(make_logger());
+            INITIALIZED.store(true, Ordering::Relaxed);
+        }
+    }
+}
+
+pub fn logger() -> &'static Logger {
+    unsafe {
+        if !std::ptr::read(&INITIALIZED).into_inner() {
+            CoreLogBuilder::new().get_logger()
+        } else {
+            &LOGGER.unwrap()
+        }
+    }
+}
+
 impl CoreLogBuilder {
     pub fn new() -> Self {
         CoreLogBuilder {
@@ -39,12 +76,18 @@ impl CoreLogBuilder {
     }
 
     // Build logger, default: Debug, Stdout, no Source info
-    pub fn get_logger(&mut self) -> slog::Logger {
+    pub fn get_logger(&mut self) -> &'static Logger {
         // todo use env variables
-        self.level(Level::Debug)
-            .destination(Destination::Stderr)
-            .source(Source::None);
-        self.builder.build().unwrap()
+        unsafe {
+            if !std::ptr::read(&INITIALIZED).into_inner() {
+                self.level(Level::Debug)
+                    .destination(Destination::Stderr)
+                    .source(Source::None);
+                let logger = Box::new(self.builder.build().unwrap());
+                set_logger(Box::leak(logger));
+            }
+            &LOGGER.unwrap()
+        }
     }
 }
 

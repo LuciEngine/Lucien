@@ -5,20 +5,18 @@ use anyhow::{anyhow, Result};
 use slog::{error, info};
 
 use crate::resources::{DefaultLoader, ResourceLoader};
+use crate::logger::logger;
 
 // Create or load a project under a directory
 pub struct Project {
-    // access the engine level logger
-    logger: Arc<slog::Logger>,
     // project root directory
     base_dir: Option<PathBuf>,
     // load resource from the directory
     loader: Option<Arc<dyn ResourceLoader>>,
 }
 impl Project {
-    pub fn new(core_logger: Arc<slog::Logger>) -> Self {
+    pub fn new() -> Self {
         Self {
-            logger: core_logger,
             base_dir: None,
             loader: None,
         }
@@ -55,15 +53,15 @@ impl Project {
             // create project directory
             match std::fs::create_dir(&root) {
                 Ok(_) => {
-                    info!(self.logger, "project created at: {:?}", root);
+                    info!(logger(), "project created at: {:?}", root);
                 }
                 Err(_) => {
-                    error!(self.logger, "project creation error: {:?}", root);
+                    error!(logger(), "project creation error: {:?}", root);
                     return Err(anyhow!("failed to create project"));
                 }
             }
         } else {
-            info!(self.logger, "project loaded from: {:?}", root);
+            info!(logger(), "project loaded from: {:?}", root);
         }
         // initialize loader with the root directory
         let loader = Arc::new(DefaultLoader::new(root));

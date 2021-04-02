@@ -2,7 +2,7 @@ use ruwren::{BasicFileLoader, ModuleScriptLoader, VMConfig, VMWrapper, FunctionS
 
 use anyhow::Result;
 use lucien_core::resources::Project;
-use lucien_core::{logger::CoreLogBuilder, Logger};
+use lucien_core::logger::logger;
 use slog::{error, info};
 
 static DEFAULT_SCRIPT: &str = r##"
@@ -11,7 +11,6 @@ System.print("No main wren function defined!")
 
 pub struct Scripting {
     vm: VMWrapper,
-    logger: Logger,
     src: String,
 }
 
@@ -24,18 +23,17 @@ impl Scripting {
             .load_script(String::from("main"))
             .unwrap_or(DEFAULT_SCRIPT.to_string());
 
-        let logger = CoreLogBuilder::new().get_logger();
         let vm = VMConfig::new()
             .enable_relative_import(true)
             .script_loader(loader)
             .build();
 
-        Ok(Self { vm, logger, src })
+        Ok(Self { vm, src })
     }
 
     // reload script
     pub fn reload(&self) {
-        info!(self.logger, "reload script");
+        info!(logger(), "reload script");
     }
 
     // get handle functions from script
@@ -43,10 +41,10 @@ impl Scripting {
         match self.vm.interpret("main", &self.src) {
             Ok(_) => {}
             Err(e) => {
-                error!(self.logger, "{}", e);
+                error!(logger(), "{}", e);
             }
         };
-        info!(self.logger, "vm started");
+        info!(logger(), "vm started");
     }
 
     // call update
@@ -61,7 +59,7 @@ impl Scripting {
         self.vm.set_slot_handle(0, &main_class);
         let res = self.vm.call_handle(&main_function);
         if let Err(e) = res {
-            error!(self.logger, "{}", e);
+            error!(logger(), "{}", e);
         }
     }
 }

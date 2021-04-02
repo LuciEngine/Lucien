@@ -18,6 +18,7 @@ use iced_winit::{
 
 use lucien_core as core;
 use lucien_core::resources::{Project, ResourceLoader};
+use lucien_core::logger::logger;
 use lucien_vm::Scripting;
 
 static VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -26,8 +27,6 @@ static VERSION: &str = env!("CARGO_PKG_VERSION");
 // todo make this a trait so you can customize the application
 // todo generic Message type
 pub struct Application {
-    // logger can be shared by threads
-    logger: Arc<core::Logger>,
     // project can be shared too?
     project: Option<Project>,
     // wren scripting
@@ -37,21 +36,15 @@ pub struct Application {
 impl Application {
     pub fn new(args: &core::ArgFlags) -> Result<Self> {
         let root = args.value_of("project").unwrap();
-        let logger = Arc::new(core::logger::CoreLogBuilder::new().get_logger());
-        let mut proj = Project::new(Arc::clone(&logger)).base_dir(root);
+        let mut proj = Project::new().base_dir(root);
         proj.create_or_load()
             .context("Failed to create or load project")?;
         let vm = Scripting::new(&proj).context("Failed to start vm")?;
 
         Ok(Self {
-            logger,
             project: Some(proj),
             vm,
         })
-    }
-
-    pub fn logger(&self) -> &Arc<core::Logger> {
-        &self.logger
     }
 
     pub fn project(&self) -> Result<&Project> {
@@ -84,7 +77,7 @@ impl Application {
         let mut glob = GlobalState::new(&event_loop);
         let mut backend = Backend::new(&glob, loader).context("Failed to create backend")?;
         let mut frontend = Frontend::new(&glob, ui).context("Failed to create frontend")?;
-        info!(&self.logger, "Window creation successful.");
+        info!(logger(), "Window creation successful.");
 
         glob.window
             .set_title(format!("lucien v{}", VERSION).as_str());
@@ -107,7 +100,7 @@ impl Application {
 
         // main loop to [produce, handle, and consume]
         // native window events + engine events
-        info!(&self.logger, "Running main loop.");
+        info!(logger(), "Running main loop.");
 
         self.vm.start();
         self.vm.update();

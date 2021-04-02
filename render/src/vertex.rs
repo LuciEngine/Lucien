@@ -1,7 +1,7 @@
 use bytemuck::{Pod, Zeroable};
 use glam::Vec3;
 
-use lucien_core::logger::CoreLogBuilder;
+use lucien_core::logger::logger;
 use slog::warn;
 
 #[repr(C)]
@@ -51,7 +51,7 @@ impl Vertex {
                 },
             });
         }
-        let logger = CoreLogBuilder::new().get_logger();
+        let logger = logger();
 
         // todo calculate normals after I figured out what is the correct face...
         if mesh.texcoords.is_empty() {
