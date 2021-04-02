@@ -1,8 +1,10 @@
-use ruwren::{BasicFileLoader, FunctionSignature, ModuleScriptLoader, VMConfig, VMWrapper};
+pub mod printer;
+use printer::LogPrinter;
 
 use anyhow::Result;
 use lucien_core::logger::logger;
 use lucien_core::resources::Project;
+use ruwren::{BasicFileLoader, FunctionSignature, ModuleScriptLoader, VMConfig, VMWrapper};
 use slog::{error, info};
 
 static DEFAULT_SCRIPT: &str = r##"
@@ -14,7 +16,6 @@ pub struct Scripting {
     src: String,
 }
 
-// todo redirect wren output to ui text
 impl Scripting {
     pub fn new(project: &Project) -> Result<Self> {
         let root = project.path("").unwrap();
@@ -25,6 +26,7 @@ impl Scripting {
 
         let vm = VMConfig::new()
             .enable_relative_import(true)
+            .printer(LogPrinter)
             .script_loader(loader)
             .build();
 

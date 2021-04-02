@@ -67,7 +67,7 @@ impl Application {
         let mut glob = GlobalState::new(&event_loop);
         let mut backend = Backend::new(&glob).context("Failed to create backend")?;
         let mut frontend = Frontend::new(&glob, ui).context("Failed to create frontend")?;
-        info!(logger(), "Window creation successful.");
+        info!(logger(), "window created successfully.");
 
         glob.window
             .set_title(format!("lucien v{}", VERSION).as_str());
@@ -90,7 +90,7 @@ impl Application {
 
         // main loop to [produce, handle, and consume]
         // native window events + engine events
-        info!(logger(), "Running main loop.");
+        info!(logger(), "running main loop.");
 
         self.vm.start();
         self.vm.update();
