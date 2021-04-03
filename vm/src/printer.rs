@@ -1,6 +1,6 @@
 use lucien_core::logger::logger;
-use slog::debug;
 use ruwren::Printer;
+use slog::debug;
 
 // todo redirect wren print to ui text
 pub struct LogPrinter;

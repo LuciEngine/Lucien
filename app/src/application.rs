@@ -93,8 +93,12 @@ impl Application {
         info!(logger(), "running main loop.");
 
         self.vm.init();
-        self.vm.start();
-        self.vm.update();
+        self.vm
+            .call(self.vm.start_fn())
+            .context("Failed to call start function")?;
+        self.vm
+            .call(self.vm.update_fn())
+            .context("Failed to call update function")?;
 
         event_loop.run(move |event, _, control_flow| {
             // when events are all handled, wait until next event arrives

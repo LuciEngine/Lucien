@@ -1,26 +1,24 @@
 pub mod printer;
 use printer::LogPrinter;
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use lucien_core::logger::logger;
 use lucien_core::resources::Project;
-use ruwren::{BasicFileLoader, FunctionSignature, ModuleScriptLoader, VMConfig, VMWrapper};
+use ruwren::{BasicFileLoader, FunctionSignature, Handle, ModuleScriptLoader, VMConfig, VMWrapper};
 use slog::{error, info};
+use std::rc::Rc;
 
 static DEFAULT_SCRIPT: &str = r##"
-class Main {
-    static start() {
-        System.print("No main function defined!")
-    }
-    static update() { }
+var start = Fn.new {
+    System.print("No start function defined!")
 }
+var update = Fn.new { }
 "##;
 
+#[derive(Debug, Clone)]
 pub struct Scripting {
     vm: VMWrapper,
     src: String,
-    has_start: bool,
-    has_update: bool,
 }
 
 // interpret and get update and start function;
@@ -40,12 +38,16 @@ impl Scripting {
             .script_loader(loader)
             .build();
 
-        Ok(Self { vm, src, has_start: false, has_update: false })
+        Ok(Self { vm, src })
+    }
+
+    pub fn as_ref(&mut self) -> &Self {
+        &*self
     }
 
     // reload script
     // todo hotload
-    pub fn init(&mut self) {
+    pub fn init(&self) {
         match self.vm.interpret("main", &self.src) {
             Ok(_) => {}
             Err(e) => {
@@ -53,61 +55,46 @@ impl Scripting {
             }
         };
         info!(logger(), "script loaded");
+    }
 
-        // find `start` fn in main.wren
-        self.has_start = self.vm.execute(|vm| {
+    // find `start` fn in main.wren
+    pub fn start_fn(&self) -> Option<Rc<Handle>> {
+        self.vm.execute(|vm| {
             if vm.has_variable("main", "start") {
                 vm.ensure_slots(1);
                 vm.get_variable("main", "start", 0);
-                true
-            }
-            else {
+                Some(self.vm.get_slot_handle(0))
+            } else {
                 error!(logger(), "script doesn't have `start` method");
-                false
+                None
             }
-        });
-        // find `update` fn in main.wren
-        self.has_update = self.vm.execute(|vm| {
+        })
+    }
+
+    // find `update` fn in main.wren
+    pub fn update_fn(&self) -> Option<Rc<Handle>> {
+        self.vm.execute(|vm| {
             if vm.has_variable("main", "update") {
                 vm.ensure_slots(1);
                 vm.get_variable("main", "update", 0);
-                true
-            }
-            else {
+                Some(self.vm.get_slot_handle(0))
+            } else {
                 error!(logger(), "script doesn't have `update` method");
-                false
+                None
             }
-        });
+        })
     }
 
-    // call start
-    pub fn start(&self) {
-        if !self.has_start { return; }
-        // get start function from main module and call
-        // let main_class = self.vm.get_slot_handle(0);
-        let handle = self
+    pub fn call(&self, handle: Option<Rc<Handle>>) -> Result<()> {
+        let fn_call = self
             .vm
-            .make_call_handle(FunctionSignature::new_function("start", 0));
-
-        // self.vm.set_slot_handle(0, &main_class);
-        let res = self.vm.call_handle(&handle);
+            .make_call_handle(FunctionSignature::new_function("call", 0));
+        self.vm.set_slot_handle(0, handle.as_ref().unwrap());
+        let res = self.vm.call_handle(&fn_call);
         if let Err(e) = res {
             error!(logger(), "* [wren] {}", e);
-        }
-    }
-
-    // call update
-    pub fn update(&self) {
-        if !self.has_update { return; }
-        // let main_class = self.vm.get_slot_handle(0);
-        let handle = self
-            .vm
-            .make_call_handle(FunctionSignature::new_function("update", 1));
-
-        // self.vm.set_slot_handle(0, &main_class);
-        let res = self.vm.call_handle(&handle);
-        if let Err(e) = res {
-            error!(logger(), "* [wren] {}", e);
-        }
+            return Err(anyhow!("wren runtime error"));
+        };
+        Ok(())
     }
 }
