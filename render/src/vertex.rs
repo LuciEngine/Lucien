@@ -1,6 +1,5 @@
 use bytemuck::{Pod, Zeroable};
 use glam::Vec3;
-
 use lucien_core::logger::logger;
 use slog::warn;
 

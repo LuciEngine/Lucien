@@ -19,7 +19,6 @@ lucien_app    = { path = "app" }
 lucien_core   = { path = "core" }
 lucien_vm     = { path = "vm" }
 ruwren   = { path = "ruwren" }
-
 # logger
 slog = "2.7"
 # error handle
