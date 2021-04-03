@@ -99,7 +99,7 @@ impl Application {
         self.vm
             .call(self.vm.update_fn())
             .context("Failed to call update function")?;
-      
+
         event_loop.run(move |event, _, control_flow| {
             // when events are all handled, wait until next event arrives
             // WaitUntil can be useful but I didn't know it was there before

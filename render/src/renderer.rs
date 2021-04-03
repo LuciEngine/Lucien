@@ -46,7 +46,6 @@ impl Renderer {
     // use first model & material to create pipeline memory layout
     pub fn new(
         device: &wgpu::Device, queue: &wgpu::Queue, settings: &RenderSettings,
-        loader: Arc<dyn ResourceLoader>,
     ) -> Result<Self> {
         let size = settings.size;
         // todo remove hard code

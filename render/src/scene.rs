@@ -12,7 +12,6 @@ pub struct Scene {
     pub ambient_light: AmbientLight,
     pub models: Vec<Model>,
     pub materials: Vec<Material>,
-    logger: Logger,
 }
 
 impl Scene {
@@ -22,7 +21,6 @@ impl Scene {
         let camera = Camera::default();
         let light = PointLight::default(device);
         let ambient_light = AmbientLight::default();
-        let logger = CoreLogBuilder::new().get_logger();
 
         Ok(Self {
             camera,
