@@ -1,8 +1,14 @@
 // Middleware that provides Luci Engine logger
 
+use crate::Logger;
+use slog::debug;
 use sloggers::terminal::TerminalLoggerBuilder;
 use sloggers::types::Severity;
 use sloggers::Build;
+use std::sync::atomic::{AtomicBool, Ordering};
+
+static mut LOGGER: Option<&Logger> = None;
+static INITIALIZED: AtomicBool = AtomicBool::new(false);
 
 #[derive(Debug)]
 pub struct CoreLogBuilder {
@@ -31,6 +37,33 @@ pub enum Source {
     File,
 }
 
+fn set_singleton(logger: &'static Logger) {
+    set_singleton_inner(|| logger)
+}
+
+fn set_singleton_inner<F>(make_singleton: F)
+where
+    F: FnOnce() -> &'static Logger,
+{
+    unsafe {
+        if !std::ptr::read(&INITIALIZED).into_inner() {
+            LOGGER = Some(make_singleton());
+            INITIALIZED.store(true, Ordering::Relaxed);
+
+            debug!(logger(), "logger initialized.");
+        }
+    }
+}
+
+pub fn logger() -> &'static Logger {
+    unsafe {
+        if !std::ptr::read(&INITIALIZED).into_inner() {
+            return CoreLogBuilder::new().get_logger();
+        }
+        LOGGER.unwrap()
+    }
+}
+
 impl CoreLogBuilder {
     pub fn new() -> Self {
         CoreLogBuilder {
@@ -39,12 +72,18 @@ impl CoreLogBuilder {
     }
 
     // Build logger, default: Debug, Stdout, no Source info
-    pub fn get_logger(&mut self) -> slog::Logger {
+    pub fn get_logger(&mut self) -> &'static Logger {
         // todo use env variables
-        self.level(Level::Debug)
-            .destination(Destination::Stderr)
-            .source(Source::None);
-        self.builder.build().unwrap()
+        unsafe {
+            if !std::ptr::read(&INITIALIZED).into_inner() {
+                self.level(Level::Debug)
+                    .destination(Destination::Stderr)
+                    .source(Source::None);
+                let logger = Box::new(self.builder.build().unwrap());
+                set_singleton(Box::leak(logger));
+            }
+            LOGGER.unwrap()
+        }
     }
 }
 
@@ -55,7 +94,6 @@ pub trait LoggerConfigTrait {
 }
 
 impl LoggerConfigTrait for CoreLogBuilder {
-    #[allow(dead_code)]
     fn level(&mut self, level: Level) -> &mut Self {
         let lv = match level {
             Level::Error => Severity::Error,
@@ -68,7 +106,6 @@ impl LoggerConfigTrait for CoreLogBuilder {
         self
     }
 
-    #[allow(dead_code)]
     fn destination(&mut self, dest: Destination) -> &mut Self {
         let output = match dest {
             Destination::Stdout => sloggers::terminal::Destination::Stdout,
@@ -78,7 +115,6 @@ impl LoggerConfigTrait for CoreLogBuilder {
         self
     }
 
-    #[allow(dead_code)]
     fn source(&mut self, source: Source) -> &mut Self {
         let src = match source {
             Source::None => sloggers::types::SourceLocation::None,

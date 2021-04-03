@@ -36,9 +36,9 @@ void main() {
   // pixel is behind camera, we hide it
   vec3 view_dir = normalize(cam_pos - v_position);
   if (dot(view_dir, cam_dir) > 0.0) { discard; }
-  // uv has some problem, idk why
-  vec4 obj_color = texture(sampler2D(t_diffuse, s_diffuse), v_tex_coord);
+
   vec3 normal = normalize(v_normal);
+  vec4 obj_color = vec4(normal, 1.0) * 1.5;
   vec3 light_dir = normalize(pl_position - v_position);
   vec3 half_dir = normalize(light_dir + view_dir);
   // simple blinn phong

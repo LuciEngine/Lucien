@@ -1,0 +1,12 @@
+[package]
+name = "lucien_vm"
+version = "0.1.0"
+authors = ["knh190 <knh190@hotmail.com>"]
+edition = "2018"
+
+[dependencies]
+lucien_core = { path = "../core" }
+ruwren = { path = "../ruwren" }
+
+slog = "2.7"
+anyhow = "*"

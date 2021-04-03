@@ -1,4 +1,5 @@
 use anyhow::Result;
+use image::RgbaImage;
 use std::sync::Arc;
 
 #[derive(Debug)]
@@ -12,10 +13,8 @@ pub struct Texture {
 }
 
 impl Texture {
-    pub fn new(path: &str, device: &wgpu::Device, queue: &wgpu::Queue) -> Self {
-        let diffuse_image = image::open(path).unwrap();
-        let diffuse_rgba = diffuse_image.to_rgba8();
-        let dimensions = &diffuse_rgba.dimensions();
+    pub fn new(rgba: &RgbaImage, device: &wgpu::Device, queue: &wgpu::Queue) -> Self {
+        let dimensions = rgba.dimensions();
 
         // create texture
         let texture_size = wgpu::Extent3d {
@@ -25,7 +24,7 @@ impl Texture {
         };
         let diffuse_texture = TextureExt::diffuse_texture(texture_size, device);
 
-        TextureExt::upload_to_gpu(&diffuse_texture, &diffuse_rgba, texture_size, queue).unwrap();
+        TextureExt::upload_to_gpu(&diffuse_texture, rgba, texture_size, queue).unwrap();
 
         // create gpu layout
         let (view, sampler) = TextureExt::view(&diffuse_texture, device);

@@ -1,0 +1,3 @@
+[submodule "ruwren"]
+	path = ruwren
+	url = git@github.com:LuciEngine/ruwren.git

@@ -1,9 +1,9 @@
-use iced_wgpu::Renderer;
+use iced_wgpu::{wgpu, Renderer};
 use iced_winit::{
     slider, Align, Color, Column, Command, Element, Length, Program, Row, Slider, Text,
 };
 
-pub struct MainInterface {
+pub struct UserInterface {
     pub background_color: Color,
     pub sliders: [slider::State; 3],
 }
@@ -14,20 +14,26 @@ pub enum Message {
 }
 
 // todo do actual main ui here
-impl MainInterface {
-    pub fn new() -> MainInterface {
+impl UserInterface {
+    pub fn new() -> UserInterface {
         Self {
             background_color: Color::WHITE,
             sliders: Default::default(),
         }
     }
 
-    pub fn background_color(&self) -> Color {
-        self.background_color
+    pub fn background_color(&self) -> wgpu::Color {
+        let [r, g, b, a] = self.background_color.into_linear();
+        wgpu::Color {
+            r: r as f64,
+            g: g as f64,
+            b: b as f64,
+            a: a as f64,
+        }
     }
 }
 
-impl Program for MainInterface {
+impl Program for UserInterface {
     type Renderer = Renderer;
     type Message = Message;
 

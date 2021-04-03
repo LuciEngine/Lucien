@@ -22,8 +22,9 @@ cargo run src/examples/data
 	* multiple light sources.
 	* multiple meshes.
 	* more camera + shaders (post processing + compute shader).
-* Scripting
-	* expose graphics api + game loop.
+* ⚠️ Scripting
+  * ✔️ game loop at fixed frame rate.
+	* ⚠️ expose graphics api.
 * Tools
 	* thinking hard on it...
 
@@ -44,5 +45,5 @@ cargo run src/examples/data
 Some C++ projects, useful but I didn't quite look into.
 
 * [entt](https://github.com/skypjack/entt)
-* [Glen](https://github.com/pulkitjuneja/GlEn)
-	* Oh I just looked into it, he's making a similar progress as me...
+* [glen](https://github.com/pulkitjuneja/GlEn)
+	* Oh I just looked into it, ~~he's making a similar progress as me~~...he's now far behind me.

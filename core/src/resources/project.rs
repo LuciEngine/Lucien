@@ -1,26 +1,19 @@
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
 
+use anyhow::{anyhow, Context, Result};
 use slog::{error, info};
 
-use crate::resources::{DefaultLoader, ResourceLoader};
+use crate::logger::logger;
+use crate::resources::loader;
 
 // Create or load a project under a directory
 pub struct Project {
-    // access the engine level logger
-    logger: Arc<slog::Logger>,
     // project root directory
     base_dir: Option<PathBuf>,
-    // load resource from the directory
-    pub loader: Option<Box<dyn ResourceLoader>>,
 }
 impl Project {
-    pub fn new(core_logger: Arc<slog::Logger>) -> Self {
-        Self {
-            logger: core_logger,
-            base_dir: None,
-            loader: None,
-        }
+    pub fn new() -> Self {
+        Self { base_dir: None }
     }
 
     pub fn path(&self, name: &str) -> Option<PathBuf> {
@@ -48,27 +41,26 @@ impl Project {
     }
 
     // create project or load from existing
-    pub fn create_or_load(&mut self) -> &mut Self {
+    pub fn create_or_load(&mut self) -> Result<()> {
         let root = self.absolute_path().unwrap();
         if !root.exists() {
             // create project directory
             match std::fs::create_dir(&root) {
                 Ok(_) => {
-                    info!(self.logger, "project created at: {:?}", root);
+                    info!(logger(), "project created at: {:?}", root);
                 }
                 Err(_) => {
-                    error!(self.logger, "project creation error: {:?}", root);
-                    return self;
+                    error!(logger(), "project creation error: {:?}", root);
+                    return Err(anyhow!("failed to create project"));
                 }
             }
         } else {
-            info!(self.logger, "project loaded from: {:?}", root);
+            info!(logger(), "project loaded from: {:?}", root);
         }
         // initialize loader with the root directory
-        let loader = Box::new(DefaultLoader::new(root));
-        self.loader = Some(loader);
+        loader::init_loader(root).context("Failed to init resource loader")?;
 
-        self
+        Ok(())
     }
 
     // change base directory

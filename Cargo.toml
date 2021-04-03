@@ -6,39 +6,20 @@ edition = "2018"
 
 [workspace]
 members = [
+  "app",
+  "core",
   "render",
-  "ui",
+  "vm",
+  "ruwren",
 ]
 
 [dependencies]
-# 3d render
-lucien_render = { path = "./render" }
-lucien_ui = { path = "./ui" }
-
-# ui
-iced = { version = "0.2.0", features = ["image", "tokio"] }
-iced_futures = "0.2"
-iced_native = "0.3"
-iced_winit = "0.2"
-iced_wgpu = "0.3"
-
+lucien_render = { path = "render" }
+lucien_app    = { path = "app" }
+lucien_core   = { path = "core" }
+lucien_vm     = { path = "vm" }
+ruwren   = { path = "ruwren" }
 # logger
 slog = "2.7"
-sloggers = "*"
-
-# serialize
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-
-# image
-image = "0.23"
-
-# render
-tobj = "2.0.4"
-wgpu = "0.6.2"
-futures = "0.3"
-
-# utils
-clap = "2.33" # cmd parser
-dirs = "3.0" # relative dir convert
-anyhow = "*" # handle error
+# error handle
+anyhow = "*"
