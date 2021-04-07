@@ -1780,7 +1780,9 @@ name = "lucien_vm"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "glam 0.13.0",
  "lucien_core",
+ "lucien_render",
  "ruwren",
  "slog",
 ]

@@ -7,7 +7,7 @@ pub struct LogPrinter;
 
 impl Printer for LogPrinter {
     fn print(&mut self, s: String) {
-        if s.len() > 0 {
+        if s.trim().len() > 0 {
             debug!(logger(), "* [wren] {}", s);
         }
     }

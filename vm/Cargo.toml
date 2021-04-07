@@ -6,7 +6,9 @@ edition = "2018"
 
 [dependencies]
 lucien_core = { path = "../core" }
+lucien_render = { path = "../render" }
 ruwren = { path = "../ruwren" }
 
 slog = "2.7"
 anyhow = "*"
+glam = { version = "0.13", features = ["serde"] } # math
