@@ -35,7 +35,8 @@ create_module!(
     }
 
     class("Graphics") crate::graphics::Graphics => cg {
-        static(fn "new_light", 3) new_light
+        static(fn "new_vec3", 3) new_vec3,
+        static(fn "new_light", 4) new_light
     }
 
     module => graphics

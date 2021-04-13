@@ -55,13 +55,26 @@ impl Class for Graphics {
 }
 
 impl Graphics {
-    // create a point light in current scene
-    pub fn new_light(vm: &VM) {
+    pub fn new_vec3(vm: &VM) {
+        // ($vm:expr => num $slot:expr)
         let x = get_slot_checked!(vm => num 1);
         let y = get_slot_checked!(vm => num 2);
         let z = get_slot_checked!(vm => num 3);
+        let vec = WrenVec3(vec3(x as f32, y as f32, z as f32));
+
+        send_foreign!(vm, "graphics", "Vec3", vec => 0);
+    }
+
+    // create a point light in current scene
+    pub fn new_light(vm: &VM) {
+        // ($vm:expr => num $slot:expr)
+        let x = get_slot_checked!(vm => num 1);
+        let y = get_slot_checked!(vm => num 2);
+        let z = get_slot_checked!(vm => num 3);
+        // ($vm:expr => foreign $t:ty => $slot:expr)
+        let color = get_slot_checked!(vm => foreign WrenVec3 => 4);
         let position = WrenVec3(vec3(x as f32, y as f32, z as f32));
-        let color = WrenVec3(vec3(0.3, 0.5, 0.3));
-        send_foreign!(vm, "graphics", "Light", Light { position, color } => 0);
+        // let color = WrenVec3(vec3(0.3, 0.5, 0.3));
+        send_foreign!(vm, "graphics", "Light", Light { position, color: *color } => 0);
     }
 }
