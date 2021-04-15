@@ -10,5 +10,5 @@ foreign class Vec3 {
 
 class Graphics {
   foreign static new_vec3(x, y, z)
-  foreign static new_light(x, y, z, color)
+  foreign static new_light(position, color)
 }

@@ -1,10 +1,13 @@
+use crate::printer::LogPrinter;
 use anyhow::{anyhow, Context, Result};
 use lucien_core::logger::logger;
 use lucien_core::resources::Project;
-use ruwren::{BasicFileLoader, FunctionSignature, Handle, ModuleScriptLoader, VMConfig, VMWrapper, ModuleLibrary};
+use ruwren::{
+    create_module, BasicFileLoader, FunctionSignature, Handle, ModuleLibrary, ModuleScriptLoader,
+    VMConfig, VMWrapper,
+};
 use slog::{error, info};
 use std::rc::Rc;
-use crate::printer::LogPrinter;
 
 static DEFAULT_SCRIPT: &str = r##"
 var start = Fn.new {
@@ -22,7 +25,6 @@ pub struct Scripting {
 // we must create wren modules here because they are private
 static GRAPHICS_MODULE_SRC: &str = include_str!("wren/graphics.wren");
 
-use ruwren::create_module;
 create_module!(
     class("Vec3") crate::graphics::WrenVec3 => vec3 {
         instance(getter "fmt") fmt
@@ -36,7 +38,7 @@ create_module!(
 
     class("Graphics") crate::graphics::Graphics => cg {
         static(fn "new_vec3", 3) new_vec3,
-        static(fn "new_light", 4) new_light
+        static(fn "new_light", 2) new_light
     }
 
     module => graphics
@@ -63,7 +65,8 @@ impl Scripting {
             .library(&lib)
             .build();
 
-        vm.interpret("graphics", GRAPHICS_MODULE_SRC).context("Failed to load wren module")?;
+        vm.interpret("graphics", GRAPHICS_MODULE_SRC)
+            .context("Failed to load wren module")?;
 
         Ok(Self { vm, src })
     }
