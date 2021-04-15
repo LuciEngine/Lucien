@@ -6,6 +6,8 @@ var start = Fn.new {
   var color = Graphics.new_vec3(0.5, 0.4, 0.6)
   var light = Graphics.new_light(position, color)
   System.print(" light: %(light.fmt)")
+
+  // todo create point light on gpu
 }
 
 var update = Fn.new {}

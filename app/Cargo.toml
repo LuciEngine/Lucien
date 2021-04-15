@@ -9,16 +9,20 @@ edition = "2018"
 [dependencies]
 lucien_render = { path = "../render" }
 lucien_core = { path = "../core" }
-lucien_vm = { path = "../vm" }
 # render
 iced = { version = "0.2.0", features = ["image", "tokio"] }
 iced_futures = "0.2"
 iced_native = "0.3"
 iced_winit = "0.2"
 iced_wgpu = "0.3"
+# vm
+ruwren = { path = "../ruwren" }
+glam = { version = "0.13", features = ["serde"] } # math
 # accurate sleep
 spin_sleep = "1.0"
 # logger
 slog = "2.7"
 # error handle
 anyhow = "*"
+# singleton
+lazy_static = "1.4"

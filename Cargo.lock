@@ -1720,7 +1720,6 @@ dependencies = [
  "lucien_app",
  "lucien_core",
  "lucien_render",
- "lucien_vm",
  "ruwren",
  "slog",
 ]
@@ -1730,14 +1729,16 @@ name = "lucien_app"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "glam 0.13.0",
  "iced",
  "iced_futures",
  "iced_native",
  "iced_wgpu",
  "iced_winit",
+ "lazy_static",
  "lucien_core",
  "lucien_render",
- "lucien_vm",
+ "ruwren",
  "slog",
  "spin_sleep",
 ]
@@ -1773,18 +1774,6 @@ dependencies = [
  "time 0.2.25",
  "tobj",
  "wgpu",
-]
-
-[[package]]
-name = "lucien_vm"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "glam 0.13.0",
- "lucien_core",
- "lucien_render",
- "ruwren",
- "slog",
 ]
 
 [[package]]

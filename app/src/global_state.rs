@@ -7,6 +7,7 @@ use iced_wgpu::{wgpu, Viewport};
 use iced_winit::{futures, winit, Size};
 use winit::event_loop::EventLoop;
 
+#[derive(Debug)]
 pub(crate) struct GlobalState {
     pub window: winit::window::Window,
     pub viewport: Viewport,

@@ -2,7 +2,7 @@ pub mod math;
 pub use math::WrenVec3;
 
 pub mod light;
-pub use light::Light;
+pub use light::*;
 
 use glam::vec3;
 use ruwren::{get_slot_checked, send_foreign, Class, VM};
@@ -17,8 +17,9 @@ impl Class for Graphics {
 }
 
 impl Graphics {
+    // create a vector3
+    // accepts 3 numbers as params
     pub fn new_vec3(vm: &VM) {
-        // ($vm:expr => num $slot:expr)
         let x = get_slot_checked!(vm => num 1);
         let y = get_slot_checked!(vm => num 2);
         let z = get_slot_checked!(vm => num 3);
@@ -28,11 +29,19 @@ impl Graphics {
     }
 
     // create a point light in current scene
+    // accepts 2 vec3 as params
     pub fn new_light(vm: &VM) {
-        // ($vm:expr => foreign $t:ty => $slot:expr)
         let position = *get_slot_checked!(vm => foreign WrenVec3 => 1);
         let color = *get_slot_checked!(vm => foreign WrenVec3 => 2);
 
         send_foreign!(vm, "graphics", "Light", Light { position, color } => 0);
+    }
+
+    pub fn new_point_light(_vm: &VM) {
+        // get wgpu device
+        let lock = crate::application::GLOB.lock();
+        let glob = lock.as_ref().unwrap();
+
+        println!("{:?}", glob)
     }
 }

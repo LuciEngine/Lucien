@@ -5,6 +5,7 @@ use iced_winit::winit;
 mod backend;
 mod frontend;
 mod global_state;
+mod vm;
 
 use backend::*;
 use frontend::*;

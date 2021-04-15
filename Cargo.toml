@@ -9,7 +9,6 @@ members = [
   "app",
   "core",
   "render",
-  "vm",
   "ruwren",
 ]
 
@@ -17,7 +16,6 @@ members = [
 lucien_render = { path = "render" }
 lucien_app    = { path = "app" }
 lucien_core   = { path = "core" }
-lucien_vm     = { path = "vm" }
 ruwren   = { path = "ruwren" }
 # logger
 slog = "2.7"

@@ -3,7 +3,7 @@ use crate::widgets::UserInterface;
 use crate::{Backend, Frontend, GlobalState};
 
 use anyhow::{anyhow, Context, Result};
-use slog::info;
+use slog::{info, debug};
 use spin_sleep;
 use std::path::PathBuf;
 
@@ -18,9 +18,17 @@ use iced_winit::{
 use lucien_core as core;
 use lucien_core::logger::logger;
 use lucien_core::resources::Project;
-use lucien_vm::Scripting;
+use crate::vm::Scripting;
 
 static VERSION: &str = env!("CARGO_PKG_VERSION");
+
+// Store global state singleton so we can access it
+use lazy_static::lazy_static;
+use std::sync::Mutex;
+
+lazy_static! {
+    pub(crate) static ref GLOB: Mutex<Option<GlobalState>> = Mutex::new(None);
+}
 
 // run an application
 // todo make this a trait so you can customize the application
@@ -64,13 +72,16 @@ impl Application {
         // create ui layout
         let ui = UserInterface::new();
         // create winit window
-        let mut glob = GlobalState::new(&event_loop);
-        let mut backend = Backend::new(&glob).context("Failed to create backend")?;
-        let mut frontend = Frontend::new(&glob, ui).context("Failed to create frontend")?;
+        let g_state = GlobalState::new(&event_loop);
+        let mut backend = Backend::new(&g_state).context("Failed to create backend")?;
+        let mut frontend = Frontend::new(&g_state, ui).context("Failed to create frontend")?;
         info!(logger(), "window created successfully.");
 
-        glob.window
+        g_state.window
             .set_title(format!("lucien v{}", VERSION).as_str());
+
+        // set glob singleton
+        *GLOB.lock().unwrap() = Some(g_state);
 
         // wake up main loop on tick and dispatch a custom event
         // from a different thread.
@@ -101,6 +112,10 @@ impl Application {
             .context("Failed to call update function")?;
 
         event_loop.run(move |event, _, control_flow| {
+            // unwrap global singleton so we can update it
+            let mut lock = GLOB.lock().unwrap();
+            let mut glob = lock.as_mut().unwrap();
+
             // when events are all handled, wait until next event arrives
             // WaitUntil can be useful but I didn't know it was there before
             *control_flow = ControlFlow::Wait;

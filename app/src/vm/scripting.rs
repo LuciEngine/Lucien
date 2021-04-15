@@ -1,4 +1,4 @@
-use crate::printer::LogPrinter;
+use crate::vm::printer::LogPrinter;
 use anyhow::{anyhow, Context, Result};
 use lucien_core::logger::logger;
 use lucien_core::resources::Project;
@@ -26,17 +26,22 @@ pub struct Scripting {
 static GRAPHICS_MODULE_SRC: &str = include_str!("wren/graphics.wren");
 
 create_module!(
-    class("Vec3") crate::graphics::WrenVec3 => vec3 {
+    class("Vec3") crate::vm::graphics::WrenVec3 => vec3 {
         instance(getter "fmt") fmt
     }
 
-    class("Light") crate::graphics::Light => light {
+    class("Light") crate::vm::graphics::Light => light {
         instance(getter "position") position,
         instance(getter "color") color,
         instance(getter "fmt") fmt
     }
 
-    class("Graphics") crate::graphics::Graphics => cg {
+    class("PointLight") crate::vm::graphics::WrenPointLight => point_light {
+        instance(getter "position") position,
+        instance(getter "color") color
+    }
+
+    class("Graphics") crate::vm::graphics::Graphics => cg {
         static(fn "new_vec3", 3) new_vec3,
         static(fn "new_light", 2) new_light
     }
