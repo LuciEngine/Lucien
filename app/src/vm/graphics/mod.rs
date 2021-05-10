@@ -37,11 +37,11 @@ impl Graphics {
         send_foreign!(vm, "graphics", "Light", Light { position, color } => 0);
     }
 
-    pub fn new_point_light(_vm: &VM) {
-        // get wgpu device
-        let lock = crate::application::GLOB.lock();
-        let glob = lock.as_ref().unwrap();
-
-        println!("{:?}", glob)
-    }
+    // pub fn new_point_light(_vm: &VM) {
+    //     // get wgpu device
+    //     let lock = crate::application::GLOB.lock();
+    //     let glob = lock.as_ref().unwrap();
+    //
+    //     println!("{:?}", glob)
+    // }
 }
